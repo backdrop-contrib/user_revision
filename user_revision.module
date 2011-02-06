@@ -7,6 +7,16 @@
  */
 
 /**
+ * Implements hook_views_api().
+ */
+function user_revision_views_api() {
+  return array(
+    'api' => '3.0-alpha1',
+    'path' => drupal_get_path('module', 'user_revision') . '/views', 
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function user_revision_menu() {
@@ -45,6 +55,15 @@ function user_revision_menu() {
     'access arguments' => array('delete user revisions'),
     'file' => 'user_revision.pages.inc',
   );
+  $items['admin/config/people/revisions'] = array(
+    'title' => 'Revision settings',
+    'description' => 'Configure revision settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('user_revision_admin_settings'),
+    'access arguments' => array('administer users'),
+    'file' => 'user_revision.admin.inc',
+    'weight' => 10,
+  );
   return $items;
 }
 
@@ -71,12 +90,14 @@ function user_revision_permission() {
  * Implements hook_admin_paths().
  */
 function user_revision_admin_paths() {
-  $paths = array(
-    'user/*/revisions' => TRUE,
-    'user/*/revisions/*/revert' => TRUE,
-    'user/*/revisions/*/delete' => TRUE,
-  );
-  return $paths;
+  if (variable_get('node_admin_theme')) {
+    $paths = array(
+      'user/*/revisions' => TRUE,
+      'user/*/revisions/*/revert' => TRUE,
+      'user/*/revisions/*/delete' => TRUE,
+    );
+    return $paths;
+  }
 }
 
 /**
@@ -161,18 +182,18 @@ function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_
     '#type' => 'fieldset',
     '#title' => t('Revision information'),
     '#collapsible' => TRUE,
-    '#collapsed' => !$account->revision,
+    '#collapsed' => !variable_get('user_revision_by_default', 0) && !$account->revision,
     '#attributes' => array(
       'class' => array('user-profile-form-revision-information'),
     ),
     '#weight' => 20,
-    '#access' => $account->revision || user_access('view user revision'),
+    '#access' => variable_get('user_revision_by_default', 0) || $account->revision || user_access('view user revision'),
   );
   $form['revision_information']['revision'] = array(
     '#type' => 'checkbox',
     '#title' => t('Create new revision'),
     '#default_value' => $account->revision,
-    '#access' => user_access('administer users'),
+    '#access' => variable_get('user_revision_by_default', 0) || user_access('administer users'),
   );
   if (!$account->revision) {
     $form['revision_information']['revision']['#states'] = array(
