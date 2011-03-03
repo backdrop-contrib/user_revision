@@ -10,7 +10,7 @@ class views_handler_field_user_revision extends views_handler_field_user {
     parent::init($view, $options);
     if (!empty($this->options['link_to_user_revision'])) {
       $this->additional_fields['vid'] = 'vid';
-      $this->additional_fields['nid'] = 'nid';
+      $this->additional_fields['uid'] = 'uid';
     }
   }
   function option_definition() {
@@ -40,7 +40,7 @@ class views_handler_field_user_revision extends views_handler_field_user {
   function render_link($data, $values) {
     if (!empty($this->options['link_to_user_revision']) && $data !== NULL && $data !== '') {
       $this->options['alter']['make_link'] = TRUE;
-      $this->options['alter']['path'] = "user/" . $values->{$this->aliases['nid']} . '/revisions/' . $values->{$this->aliases['vid']} .'/view';
+      $this->options['alter']['path'] = "user/" . $values->{$this->aliases['uid']} . '/revisions/' . $values->{$this->aliases['vid']} .'/view';
     }
     else {
       return parent::render_link($data, $values);

@@ -111,6 +111,13 @@ function user_revision_schema() {
         'serialize' => TRUE,
         'description' => 'A serialized array of name value pairs that are related to the user. Any form values posted during user edit are stored and are loaded into the $user object during user_load(). Use of this field is discouraged and it will likely disappear in a future version of Drupal.',
       ),
+      'ip' => array(
+        'type' => 'varchar',
+        'description' => 'The users\'s ip address.',
+        'length' => 256,
+        'not null' => TRUE,
+        'default' => '',
+      ),
     ),
     'indexes' => array(
       'uid' => array('uid'),
@@ -146,10 +153,15 @@ function user_revision_install() {
     db_add_field('users', $name, $spec);
   }
   db_query('update {users} set vid = uid');
-  
+
+  // Add all users to the revision table
   $sql =  'insert into {user_revision} (uid, vid, log, timestamp, authorid, name, mail, theme, signature, signature_format, status, timezone, language, picture, data)';
   $sql .= ' select uid, vid, \'\', UNIX_TIMESTAMP(), uid, name, mail, theme, signature, signature_format, status, timezone, language, picture, data from {users}';
-  $sql .= ' where uid > 0 AND uid not in (select uid from {user_revision})';
+  $sql .= ' where uid not in (select uid from {user_revision}) order by uid desc';
+  db_query($sql);
+
+  // Make sure data is correct for anon user
+  $sql = 'update user_revision set vid=0 where uid=0;';
   db_query($sql);
 
   foreach ($schema['users']['unique keys'] as $name => $spec) {

@@ -1,13 +1,12 @@
 <?php
 // $Id:
 /**
- * Field handler to present delete a user revision.
+ * Field handler to present a link to delete a user to a revision
  */
 class views_handler_field_user_revision_link_delete extends views_handler_field_user_link {
   function construct() {
     parent::construct();
-    $this->additional_fields['authorid'] = array('table' => 'user', 'field' => 'authorid');
-    $this->additional_fields['user_vid'] = array('table' => 'user', 'field' => 'vid');
+    $this->additional_fields['uid'] = 'uid';
     $this->additional_fields['vid'] = 'vid';
   }
 
@@ -16,16 +15,16 @@ class views_handler_field_user_revision_link_delete extends views_handler_field_
   }
 
   function render_link($data, $values) {
-    if (!this->access()) {
+    if (!$this->access()) {
       return;
     }
 
     $text = !empty($this->options['text']) ? $this->options['text'] : t('delete');
-
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "user/$user->nid/revisions/$user->vid/delete";
+    $this->options['alter']['path'] = "user/" . $values->{$this->aliases['uid']} . "/revisions/" . $values->{$this->aliases['vid']} . "/delete";
     $this->options['alter']['query'] = drupal_get_destination();
 
     return $text;
   }
 }
+

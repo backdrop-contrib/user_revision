@@ -119,6 +119,7 @@ class UserRevisionController extends UserController {
     unset($fields['timestamp']);
     $query->addField('revision', 'timestamp', 'revision_timestamp');
     $query->addField('revision', 'authorid', 'revision_uid');
+    $query->addField('revision', 'ip', 'revision_ip');
     $fields['uid']['table'] = 'base';
     return $query;
   }
@@ -134,6 +135,13 @@ function user_revision_schema_alter(&$schema) {
     'unsigned' => TRUE,
     'not null' => TRUE,
     'default' => 0,
+  );
+  $schema['users']['fields']['ip'] = array(
+      'description' => 'The users\'s ip address',
+      'type' => 'varchar',
+      'length' => 256,
+      'not null' => TRUE,
+      'default' => '',
   );
   $schema['users']['foreign keys']['user_revision'] = array(
     'table' => 'user_revision',
@@ -177,7 +185,6 @@ function user_revision_form_user_register_form_alter(&$form, &$form_state, $form
 function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
   $account = $form_state['user'];
   $account->revision = FALSE;
-
   $form['revision_information'] = array(
     '#type' => 'fieldset',
     '#title' => t('Revision information'),
@@ -215,6 +222,10 @@ function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_
     '#type' => 'value', 
     '#value' => isset($account->vid) ? $account->vid : NULL,
   );
+    $form['ip'] = array(
+      '#type' => 'value',
+      '#value' => ip_address(),
+  );
 }
 
 /**
@@ -223,6 +234,7 @@ function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_
 function user_revision_user_profile_form_submit($form, &$form_state) {
   $form_state['user']->revision = $form_state['values']['revision'];
   $form_state['user']->log = $form_state['values']['log'];
+  $form_state['user']->ip = $form_state['values']['ip'];
 }
 
 /**
@@ -258,7 +270,7 @@ function user_revision_user_load($uid, $vid = NULL, $reset = FALSE) {
  */
 function user_revision_user_presave(&$edit, $account, $category) {
   $edit['log'] = empty($edit['log']) ? '' : $edit['log'];
-  if (isset($edit['revision']) && $edit['revision'] == 1) {
+  if ((isset($edit['revision']) && $edit['revision'] == 1) || $account->is_new) {
     $edit['uid'] = $account->uid;
     $edit['old_vid'] = $edit['vid'];
     unset($edit['vid']);
@@ -267,19 +279,6 @@ function user_revision_user_presave(&$edit, $account, $category) {
     $edit['authorid'] = $user->uid;
     _user_save_revision($edit);
   }
-}
-
-/**
- * Implements hook_user_insert().
- */
-function user_revision_user_insert(&$edit, $account, $category) {
-  $edit['uid'] = $account->uid;
-  $edit['old_vid'] = $edit['vid'];
-  unset($edit['vid']);
-  $edit['timestamp'] = REQUEST_TIME;
-  global $user;
-  $edit['authorid'] = $user->uid;
-  _user_save_revision($edit);
 }
 
 /**
@@ -311,7 +310,7 @@ function _user_save_revision(&$edit, $update = NULL) {
  */
 function user_revision_list($user) {
   $revisions = array();
-  $result = db_query('SELECT r.vid, r.name, r.log, r.authorid, u.vid AS current_vid, r.timestamp, a.name FROM {user_revision} r LEFT JOIN {users} u ON u.vid = r.vid LEFT JOIN {users} a ON r.authorid = a.uid WHERE r.uid = :uid ORDER BY r.vid DESC', array(':uid' => $user->uid));
+  $result = db_query('SELECT r.vid, r.name, r.log, r.authorid,r.ip, u.vid AS current_vid, r.timestamp, a.name FROM {user_revision} r LEFT JOIN {users} u ON u.vid = r.vid LEFT JOIN {users} a ON r.authorid = a.uid WHERE r.uid = :uid ORDER BY r.vid DESC', array(':uid' => $user->uid));
   foreach ($result as $revision) {
     $revisions[$revision->vid] = $revision;
   }

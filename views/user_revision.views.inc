@@ -10,33 +10,34 @@
  */
 function user_revision_views_data() {
 
-  // ----------------------------------------------------------------------
-  // User revision table
+  // add join to users
+  $data['users']['table']['join'] = array(
+    'user_revision' => array(
+      'left_field' => 'uid',
+      'field' => 'uid',
+      'type' => 'INNER',
+    ),
+  );
 
-  // Define the base group of this table. Fields that don't
-  // have a group defined will go into this field by default.
   $data['user_revision']['table']['group']  = t('User revision');
-
-  // Advertise this table as a possible base table
   $data['user_revision']['table']['base'] = array(
     'field' => 'vid',
     'title' => t('User revision'),
-    'help' => t('User revision are a history of changes to nodes.'),
+    'help' => t('User revision are a history of changes to users.'),
   );
 
   // For other base tables, explain how we join
   $data['user_revision']['table']['join'] = array(
-    // Directly links to node table.
     'users' => array(
       'left_field' => 'vid',
       'field' => 'vid',
     ),
   );
 
-  // uid field for node revision
+  // uid field for user revision
   $data['user_revision']['authorid'] = array(
     'title' => t('User'),
-    'help' => t('Relate a node revision to the user who created the revision.'),
+    'help' => t('Relate an user revision to the user who created the revision.'),
     'relationship' => array(
       'handler' => 'views_handler_relationship',
       'base' => 'users',
@@ -45,7 +46,6 @@ function user_revision_views_data() {
     ),
   );
 
-  // nid
   $data['user_revision']['vid'] = array(
     'title' => t('Vid'),
     'help' => t('The revision ID of the user revision.'),
@@ -69,20 +69,31 @@ function user_revision_views_data() {
     'relationship' => array(
       'handler' => 'views_handler_relationship',
       'base' => 'users',
-      'base field' => 'uid',
+      'base field' => 'vid',
       'title' => t('User'),
-      'label' => t('Get the actual node from a user revision.'),
+      'label' => t('Get the actual user from a user revision.'),
+    ),
+  );
+
+  $data['user_revision']['uid'] = array(
+      'title' => t('Uid'),
+      'help' => t('The uid field of the user revisions table'),
+      'relationship' => array(
+        'handler' => 'views_handler_relationship',
+        'base' => 'users',
+        'base field' => 'uid',
+        'title' => t('User'),
+        'label' => t('Get all revisions from an user.'),
     ),
   );
 
   // name
   $data['user_revision']['name'] = array(
     'title' => t('Name'), // The item it appears as on the UI,
-    'help' => t('The title of the node.'), // The help that appears on the UI,
+    'help' => t('The user name.'), // The help that appears on the UI,
      // Information for displaying a title as a field
     'field' => array(
       'field' => 'name', // the real field
-      // @TODO
       'handler' => 'views_handler_field_user_revision',
       'click sortable' => TRUE,
      ),
@@ -124,6 +135,24 @@ function user_revision_views_data() {
     ),
     'filter' => array(
       'handler' => 'views_handler_filter_date',
+    ),
+  );
+
+  $data['user_revision']['ip'] = array(
+    'title' => t('IP'),
+    'help' => t('The IP address of the user that edited this user last.'),
+    'field' => array(
+      'click sortable' => TRUE,
+    ),
+    // Information for accepting a nid as an argument
+    'argument' => array(
+      'handler' => 'views_handler_argument_string',
+      'click sortable' => FALSE,
+      'numeric' => TRUE,
+    ),
+    // Information for accepting a uid as a filter
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
     ),
   );
 
