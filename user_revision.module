@@ -24,8 +24,8 @@ function user_revision_menu() {
     'title' => 'Revisions',
     'page callback' => 'user_revision_overview',
     'page arguments' => array(1),
-    'access callback' => 'user_access',
-    'access arguments' => array('view user revisions'),
+    'access callback' => '_user_revision_access',
+    'access arguments' => array(1, 'view user revisions'),
     'weight' => 2,
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_revision.pages.inc',
@@ -65,6 +65,14 @@ function user_revision_menu() {
     'weight' => 10,
   );
   return $items;
+}
+
+/**
+ * Access callback
+ */
+function _user_revision_access($user, $perm){
+  $count = db_query("SELECT count(*) FROM {user_revision} WHERE uid = :uid", array(':uid' => $user->uid))->fetchField();
+  return user_access($perm) && ($count > 1);
 }
 
 /**
@@ -269,6 +277,13 @@ function user_revision_user_load($uid, $vid = NULL, $reset = FALSE) {
 }
 
 /**
+ * Implements hook_user_insert().
+ */
+function user_revision_user_insert(&$edit, $account, $category){
+  db_query("UPDATE {user_revision} SET uid = :uid WHERE vid = :vid", array(':uid' => $account->uid, ':vid' => $account->vid));
+}
+
+/**
  * Implements hook_user_presave().
  */
 function user_revision_user_presave(&$edit, $account, $category) {
@@ -298,8 +313,10 @@ function user_revision_user_delete($account) {
  * Save record to the database.
  */
 function _user_save_revision(&$edit, $update = NULL) {
-  $picture = $edit['picture'];
-  $edit['picture'] = $picture->fid;
+  if(isset($edit['picture'])){
+    $picture = $edit['picture'];
+    $edit['picture'] = $picture->fid;
+  }
   // add timestamp and author
   if (isset($update)) {
     $res = drupal_write_record('user_revision', $edit, $update);
@@ -307,8 +324,10 @@ function _user_save_revision(&$edit, $update = NULL) {
   else {
     $res = drupal_write_record('user_revision', $edit);
   }
-  file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
-  $edit['picture'] = $picture;
+  if(isset($edit['picture'])){
+    file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
+    $edit['picture'] = $picture;
+  }
   // pass new vid to user_save?
 }
 
@@ -317,7 +336,7 @@ function _user_save_revision(&$edit, $update = NULL) {
  */
 function user_revision_list($user) {
   $revisions = array();
-  $result = db_query('SELECT r.vid, r.name, r.log, r.authorid,r.ip, u.vid AS current_vid, r.timestamp, a.name FROM {user_revision} r LEFT JOIN {users} u ON u.vid = r.vid LEFT JOIN {users} a ON r.authorid = a.uid WHERE r.uid = :uid ORDER BY r.vid DESC', array(':uid' => $user->uid));
+  $result = db_query('SELECT r.vid, r.name, r.log, r.authorid,r.ip, u.vid AS current_vid, r.uid, r.timestamp, a.name FROM {user_revision} r LEFT JOIN {users} u ON u.vid = r.vid LEFT JOIN {users} a ON r.authorid = a.uid WHERE r.uid = :uid ORDER BY r.vid DESC', array(':uid' => $user->uid));
   foreach ($result as $revision) {
     $revisions[$revision->vid] = $revision;
   }

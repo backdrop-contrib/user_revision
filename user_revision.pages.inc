@@ -14,7 +14,6 @@ function user_revision_overview($user) {
   $header = array(t('Revision'), array('data' => t('Operations'), 'colspan' => 2));
 
   $revisions = user_revision_list($user);
-
   $rows = array();
   $revert_permission = FALSE;
   if (user_access('revert revisions') || user_access('administer users')) {
@@ -28,7 +27,6 @@ function user_revision_overview($user) {
   foreach ($revisions as $revision) {
     $row = array();
     $operations = array();
-
     if ($revision->current_vid > 0) {
       $row[] = array('data' => t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$user->uid"), '!username' => theme('username', array('account' => $revision))))
                                . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
