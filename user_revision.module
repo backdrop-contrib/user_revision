@@ -119,7 +119,6 @@ class UserRevisionController extends UserController {
     unset($fields['timestamp']);
     $query->addField('revision', 'timestamp', 'revision_timestamp');
     $query->addField('revision', 'authorid', 'revision_uid');
-    $query->addField('revision', 'ip', 'revision_ip');
     $fields['uid']['table'] = 'base';
     return $query;
   }
@@ -261,6 +260,10 @@ function user_revision_user_load($uid, $vid = NULL, $reset = FALSE) {
   if (isset($vid)) {
     $conditions = (isset($vid) ? array('vid' => $vid) : array());
     $users = user_load_multiple(array($uid), $conditions, $reset);
+    foreach($users as $key => $user){
+      $file->fid = db_query("SELECT picture FROM {user_revision} WHERE vid = :vid", array(':vid' => $vid))->fetchField();
+      $users[$key]->picture = file_load($file->fid);
+    }
     return reset($users);
   }
 }
@@ -295,6 +298,8 @@ function user_revision_user_delete($account) {
  * Save record to the database.
  */
 function _user_save_revision(&$edit, $update = NULL) {
+  $picture = $edit['picture'];
+  $edit['picture'] = $picture->fid;
   // add timestamp and author
   if (isset($update)) {
     $res = drupal_write_record('user_revision', $edit, $update);
@@ -302,6 +307,8 @@ function _user_save_revision(&$edit, $update = NULL) {
   else {
     $res = drupal_write_record('user_revision', $edit);
   }
+  file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
+  $edit['picture'] = $picture;
   // pass new vid to user_save?
 }
 
