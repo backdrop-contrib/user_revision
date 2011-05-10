@@ -34,16 +34,16 @@ function user_revision_menu() {
     'title' => 'Revisions',
     'page callback' => 'user_revision_show',
     'page arguments' => array(1, 3),
-    'access callback' => 'user_access',
-    'access arguments' => array('view user revisions'),
+    'access callback' => '_user_revision_access',
+    'access arguments' => array(1, 'view user revisions'),
   );
   $items['user/%user_revision/revisions/%/revert'] = array(
     'title' => 'Revert to earlier revision',
     'load arguments' => array(3),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_revert_confirm', 1),
-    'access callback' => 'user_access',
-    'access arguments' => array('revert user revisions'),
+    'access callback' => '_user_revision_access',
+    'access arguments' => array(1, 'revert user revisions'),
     'file' => 'user_revision.pages.inc',
   );
   $items['user/%user_revision/revisions/%/delete'] = array(
@@ -51,8 +51,8 @@ function user_revision_menu() {
     'load arguments' => array(3),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_delete_confirm', 1),
-    'access callback' => 'user_access',
-    'access arguments' => array('delete user revisions'),
+    'access callback' => '_user_revision_access',
+    'access arguments' => array(1, 'delete user revisions'),
     'file' => 'user_revision.pages.inc',
   );
   $items['admin/config/people/revisions'] = array(
@@ -90,6 +90,9 @@ function user_revision_permission() {
     ),
     'delete user revisions' => array(
       'title' => t('Delete revisions'),
+    ),
+    'choose own user revisions' => array(
+      'title' => t('Choose to create revisions on own user profile'),
     ),
   );
 }
@@ -144,11 +147,11 @@ function user_revision_schema_alter(&$schema) {
     'default' => 0,
   );
   $schema['users']['fields']['ip'] = array(
-      'description' => 'The users\'s ip address',
-      'type' => 'varchar',
-      'length' => 256,
-      'not null' => TRUE,
-      'default' => '',
+    'description' => 'The users\'s ip address',
+    'type' => 'varchar',
+    'length' => 256,
+    'not null' => TRUE,
+    'default' => '',
   );
   $schema['users']['foreign keys']['user_revision'] = array(
     'table' => 'user_revision',
@@ -191,37 +194,31 @@ function user_revision_form_user_register_form_alter(&$form, &$form_state, $form
  */
 function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
   $account = $form_state['user'];
-  $account->revision = FALSE;
   $form['revision_information'] = array(
     '#type' => 'fieldset',
     '#title' => t('Revision information'),
     '#collapsible' => TRUE,
-    '#collapsed' => !variable_get('user_revision_by_default', 0) && !$account->revision,
     '#attributes' => array(
       'class' => array('user-profile-form-revision-information'),
     ),
     '#weight' => 20,
-    '#access' => variable_get('user_revision_by_default', 0) || $account->revision || user_access('view user revision'),
+    '#access' => user_access('choose own user revisions') || user_access('administer users'),
   );
   $form['revision_information']['revision'] = array(
     '#type' => 'checkbox',
     '#title' => t('Create new revision'),
-    '#default_value' => $account->revision,
-    '#access' => variable_get('user_revision_by_default', 0) || user_access('administer users'),
+    '#default_value' => variable_get('user_revision_by_default', 1),
   );
-  if (!$account->revision) {
-    $form['revision_information']['revision']['#states'] = array(
-      'checked' => array(
-        'textarea[name="log"]' => array('empty' => FALSE),
-      ),
-    );
-  }
   $form['revision_information']['log'] = array(
     '#type' => 'textarea',
     '#title' => t('Revision log message'),
     '#rows' => 4,
-    '#default_value' => !empty($account->log) ? $account->log : '',
     '#description' => t('Provide an explanation of the changes you are making. This will help other authors understand your motivations.'),
+  );
+  $form['revision_information']['log']['#states'] = array(
+    'invisible' => array(
+      'input[name="revision"]' => array('checked' => FALSE),
+    ),
   );
   $form['#submit'][] = 'user_revision_user_profile_form_submit';
 
