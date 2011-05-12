@@ -8,39 +8,58 @@
 /**
  * Generate an overview table of older revisions of a user.
  */
-function user_revision_overview($user) {
-  drupal_set_title(t('Revisions for %title', array('%title' => $user->name)), PASS_THROUGH);
+function user_revision_overview($viewed_user) {
+  global $user;
+  drupal_set_title(t('Revisions for %title', array('%title' => $viewed_user->name)), PASS_THROUGH);
 
   $header = array(t('Revision'), array('data' => t('Operations'), 'colspan' => 2));
 
-  $revisions = user_revision_list($user);
+  $revisions = user_revision_list($viewed_user);
   $rows = array();
   $revert_permission = FALSE;
-  if (user_access('revert revisions') || user_access('administer users')) {
-    $revert_permission = TRUE;
-  }
   $delete_permission = FALSE;
-  if (user_access('delete revisions') || user_access('administer users')) {
-    $delete_permission = TRUE;
+  if($user->uid == $viewed_user->uid){
+    if (user_access('revert own user revisions') || user_access('revert user revisions') || user_access('administer users')) {
+      $revert_permission = TRUE;
+    }
+    if (user_access('delete own user revisions') || user_access('delete user revisions') || user_access('administer users')) {
+      $delete_permission = TRUE;
+    }
+  }
+  else {
+    if (user_access('revert user revisions') || user_access('administer users')) {
+      $revert_permission = TRUE;
+    }
+    if (user_access('delete user revisions') || user_access('administer users')) {
+      $delete_permission = TRUE;
+    }
   }
 
   foreach ($revisions as $revision) {
     $row = array();
     $operations = array();
     if ($revision->current_vid > 0) {
-      $row[] = array('data' => t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$user->uid"), '!username' => theme('username', array('account' => $revision))))
+      $row[] = array('data' => t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"), '!username' => theme('username', array('account' => $revision))))
                                . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
                      'class' => array('revision-current'));
       $operations[] = array('data' => drupal_placeholder(t('current revision')), 'class' => array('revision-current'), 'colspan' => 2);
     }
     else {
-      $row[] = t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$user->uid/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
+      $row[] = t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
                . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '');
       if ($revert_permission) {
-        $operations[] = l(t('revert'), "user/$user->uid/revisions/$revision->vid/revert");
+        $operations[] = l(t('revert'), "user/$viewed_user->uid/revisions/$revision->vid/revert");
+      }
+      else {
+        //empty row for theming purposes
+        $operations[] = "";
       }
       if ($delete_permission) {
-        $operations[] = l(t('delete'), "user/$user->uid/revisions/$revision->vid/delete");
+        $operations[] = l(t('delete'), "user/$viewed_user->uid/revisions/$revision->vid/delete");
+      }
+      else {
+        //empty row for theming purposes
+        $operations[] = "";
       }
     }
     $rows[] = array_merge($row, $operations);

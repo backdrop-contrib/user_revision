@@ -25,7 +25,7 @@ function user_revision_menu() {
     'page callback' => 'user_revision_overview',
     'page arguments' => array(1),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, 'view user revisions'),
+    'access arguments' => array(1, array('view user revisions', 'view own user revisions')),
     'weight' => 2,
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_revision.pages.inc',
@@ -35,7 +35,7 @@ function user_revision_menu() {
     'page callback' => 'user_revision_show',
     'page arguments' => array(1, 3),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, 'view user revisions'),
+    'access arguments' => array(1, array('view user revisions', 'view own user revisions')),
   );
   $items['user/%user_revision/revisions/%/revert'] = array(
     'title' => 'Revert to earlier revision',
@@ -43,7 +43,7 @@ function user_revision_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_revert_confirm', 1),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, 'revert user revisions'),
+    'access arguments' => array(1, array('revert user revisions', 'revert own user revisions')),
     'file' => 'user_revision.pages.inc',
   );
   $items['user/%user_revision/revisions/%/delete'] = array(
@@ -52,7 +52,7 @@ function user_revision_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_delete_confirm', 1),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, 'delete user revisions'),
+    'access arguments' => array(1, array('delete user revisions', 'delete own user revisions')),
     'file' => 'user_revision.pages.inc',
   );
   $items['admin/config/people/revisions'] = array(
@@ -60,7 +60,7 @@ function user_revision_menu() {
     'description' => 'Configure revision settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_admin_settings'),
-    'access arguments' => array('administer users'),
+    'access arguments' => array('view user revisions'),
     'file' => 'user_revision.admin.inc',
     'weight' => 10,
   );
@@ -70,9 +70,22 @@ function user_revision_menu() {
 /**
  * Access callback
  */
-function _user_revision_access($user, $perm){
-  $count = db_query("SELECT count(*) FROM {user_revision} WHERE uid = :uid", array(':uid' => $user->uid))->fetchField();
-  return user_access($perm) && ($count > 1);
+function _user_revision_access($u, $perm){
+  global $user;
+  if(!is_array($perm)){
+    $perm = array($perm);
+  }
+  $access = FALSE;
+  foreach($perm as $permission){
+    if($u->uid == $user->uid){
+      $access = user_access($permission) || $access;
+    }
+    elseif (strpos($permission, 'own') === FALSE){
+      $access = user_access($permission) || $access;
+    }
+  }
+  $count = db_query("SELECT count(*) FROM {user_revision} WHERE uid = :uid", array(':uid' => $u->uid))->fetchField();
+  return $access && ($count > 1);
 }
 
 /**
@@ -91,8 +104,21 @@ function user_revision_permission() {
     'delete user revisions' => array(
       'title' => t('Delete revisions'),
     ),
-    'choose own user revisions' => array(
-      'title' => t('Choose to create revisions on own user profile'),
+    'choose user revisions' => array(
+      'title' => t('Choose to create revisions'),
+      'description' => t('Allow users to create user revisions')
+    ),
+    'view own user revisions' =>  array(
+      'title' => t('View own revisions'),
+      'description' => t('Allow users to view their own user revisions'),
+    ),
+    'revert own user revisions' => array(
+      'title' => t('Revert own revisions'),
+      'description' => t('Allow users to revert their own user revisions'),
+    ),
+    'delete own user revisions' => array(
+      'title' => t('Delete own revisions'),
+      'description' => t('Allow users to delete their own user revisions'),
     ),
   );
 }
@@ -202,7 +228,7 @@ function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_
       'class' => array('user-profile-form-revision-information'),
     ),
     '#weight' => 20,
-    '#access' => user_access('choose own user revisions') || user_access('administer users'),
+    '#access' => user_access('choose user revisions'),
   );
   $form['revision_information']['revision'] = array(
     '#type' => 'checkbox',
