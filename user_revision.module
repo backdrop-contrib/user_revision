@@ -336,7 +336,7 @@ function user_revision_user_delete($account) {
  * Save record to the database.
  */
 function _user_save_revision(&$edit, $update = NULL) {
-  if(isset($edit['picture'])){
+  if(is_object($edit['picture'])){
     $picture = $edit['picture'];
     $edit['picture'] = $picture->fid;
   }
@@ -347,7 +347,7 @@ function _user_save_revision(&$edit, $update = NULL) {
   else {
     $res = drupal_write_record('user_revision', $edit);
   }
-  if(isset($edit['picture'])){
+  if(is_object($edit['picture'])){
     file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
     $edit['picture'] = $picture;
   }
