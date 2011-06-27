@@ -173,6 +173,7 @@ function user_revision_install() {
 * Implementation of hook_uninstall().
 */
 function user_revision_uninstall() {
+  module_load_include('module', 'user_revision');
   $schema['users'] = array();
   user_revision_schema_alter($schema);
   foreach ($schema['users']['unique keys'] as $name => $spec) {
