@@ -163,10 +163,6 @@ function user_revision_install() {
   // Make sure data is correct for anon user
   $sql = 'update user_revision set vid=0 where uid=0;';
   db_query($sql);
-
-  foreach ($schema['users']['unique keys'] as $name => $spec) {
-    db_add_unique_key('users', $name, $spec);
-  }
 }
 
 /**

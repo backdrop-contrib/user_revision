@@ -17,6 +17,28 @@ function user_revision_views_api() {
 }
 
 /**
+ * Implements hook_disable().
+ */
+function user_revision_disable() {
+  module_load_include('install', 'user_revision');
+  $schema['users'] = array();
+  user_revision_schema_alter($schema);
+  foreach ($schema['users']['unique keys'] as $name => $spec) {
+    db_drop_unique_key('users', $name);
+  }
+}
+
+function user_revision_enable() {
+  db_query("UPDATE users set vid = uid where vid = 0 AND uid <> 0");
+  module_load_include('install', 'user_revision');
+  $schema['users'] = array();
+  user_revision_schema_alter($schema);
+  foreach ($schema['users']['unique keys'] as $name => $spec) {
+    db_add_unique_key('users', $name, $spec);
+  }
+}
+
+/**
  * Implements hook_menu().
  */
 function user_revision_menu() {
