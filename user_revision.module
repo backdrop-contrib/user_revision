@@ -29,7 +29,17 @@ function user_revision_disable() {
 }
 
 function user_revision_enable() {
-  db_query("UPDATE users set vid = uid where vid = 0 AND uid <> 0");
+  $sql =  'INSERT INTO {user_revision} ';
+  $sql .= '(uid, vid, log, timestamp, authorid, name, mail,
+          theme, signature, signature_format, status, timezone,
+          language, picture, data)';
+  $sql .= ' SELECT u.uid, u.vid, \'\', UNIX_TIMESTAMP(), u.uid, u.name, u.mail,
+          u.theme, u.signature, u.signature_format, u.status, u.timezone,
+          u.language, u.picture, u.data
+          FROM {users} u';
+  $sql .= ' WHERE u.vid=0 AND u.uid <> 0';
+  db_query($sql);
+  db_query("UPDATE {users} u SET vid = (SELECT vid FROM {user_revision} v WHERE v.uid = u.uid) WHERE u.vid = 0 AND u.uid <> 0");
   module_load_include('install', 'user_revision');
   $schema['users'] = array();
   user_revision_schema_alter($schema);
