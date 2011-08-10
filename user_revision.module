@@ -344,15 +344,22 @@ function user_revision_user_insert(&$edit, $account, $category){
  * Implements hook_user_presave().
  */
 function user_revision_user_presave(&$edit, $account, $category) {
+  global $user;
   $edit['log'] = empty($edit['log']) ? '' : $edit['log'];
-  if ((isset($edit['revision']) && $edit['revision'] == 1) || $account->is_new) {
-    $edit['uid'] = $account->uid;
+  $edit = array_merge((array)$account, $edit);
+  $edit['timestamp'] = REQUEST_TIME;
+  $edit['authorid'] = $user->uid;
+
+  if ((isset($edit['revision']) && $edit['revision'] == 1)
+    || $account->is_new
+    || (!isset($edit['revision']) && variable_get('user_revision_by_default', 1))) {
+
     $edit['old_vid'] = $edit['vid'];
     unset($edit['vid']);
-    $edit['timestamp'] = REQUEST_TIME;
-    global $user;
-    $edit['authorid'] = $user->uid;
     _user_save_revision($edit);
+  }
+  else {
+    _user_save_revision($edit, array('vid'));
   }
 }
 
@@ -371,7 +378,7 @@ function user_revision_user_delete($account) {
  */
 function _user_save_revision(&$edit, $update = NULL) {
   $picture = NULL;
-  if(is_object($edit['picture'])){
+  if(isset($edit['picture']) && is_object($edit['picture'])){
     $picture = $edit['picture'];
     $edit['picture'] = $picture->fid;
   }
