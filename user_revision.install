@@ -161,7 +161,7 @@ function user_revision_install() {
   db_query($sql);
 
   // Make sure data is correct for anon user
-  $sql = 'update user_revision set vid=0 where uid=0;';
+  $sql = 'update {user_revision} set vid=0 where uid=0;';
   db_query($sql);
 }
 
