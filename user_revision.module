@@ -354,8 +354,10 @@ function user_revision_user_presave(&$edit, $account, $category) {
     || $account->is_new
     || (!isset($edit['revision']) && variable_get('user_revision_by_default', 1))) {
 
-    $edit['old_vid'] = $edit['vid'];
-    unset($edit['vid']);
+    if (isset($edit['vid'])) {
+      $edit['old_vid'] = $edit['vid'];
+      unset($edit['vid']);
+    }
     _user_save_revision($edit);
   }
   else {
