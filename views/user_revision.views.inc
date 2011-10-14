@@ -36,13 +36,13 @@ function user_revision_views_data() {
 
   // uid field for user revision
   $data['user_revision']['authorid'] = array(
-    'title' => t('User'),
+    'title' => t('Revision author'),
     'help' => t('Relate an user revision to the user who created the revision.'),
     'relationship' => array(
       'handler' => 'views_handler_relationship',
       'base' => 'users',
       'base field' => 'uid',
-      'label' => t('revision user'),
+      'label' => t('Revision author'),
     ),
   );
 
