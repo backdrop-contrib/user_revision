@@ -370,7 +370,8 @@ function user_revision_user_presave(&$edit, $account, $category) {
  */
 function user_revision_user_delete($account) {
   $revisions = db_query('SELECT vid FROM {user_revision} WHERE uid = :uid', array(':uid' => $account->uid))->fetchCol();
-  foreach ($revisions as $revision) {
+  foreach ($revisions as $revision_id) {
+    $revision = user_revision_load($account->uid, $revision_id);
     user_revision_delete($revision);
   }
 }
