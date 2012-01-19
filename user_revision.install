@@ -163,6 +163,7 @@ function user_revision_install() {
   // Make sure data is correct for anon user
   $sql = 'update {user_revision} set vid=0 where uid=0;';
   db_query($sql);
+  db_update('system')->fields(array('weight' => 99))->condition('name', 'user_revision', '=')->execute();
 }
 
 /**
@@ -178,4 +179,12 @@ function user_revision_uninstall() {
   foreach ($schema['users']['fields'] as $name => $spec) {
     db_drop_field('users', $name);
   }
+}
+
+/**
+ * Change the weight of User Revision Module so all user hooks are executed last.
+ * This way all changes made in hook_user_presave etc. won't be lost.
+ */
+function user_revision_update_7001() {
+  db_update('system')->fields(array('weight' => 99))->condition('name', 'user_revision', '=')->execute();
 }
