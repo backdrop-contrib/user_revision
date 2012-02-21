@@ -19,18 +19,18 @@ function user_revision_overview($viewed_user) {
   $revert_permission = FALSE;
   $delete_permission = FALSE;
   if($user->uid == $viewed_user->uid){
-    if (user_access('revert own user revisions') || user_access('revert user revisions') || user_access('administer users')) {
+    if (user_access('revert own user revisions') || user_access('revert user revisions')) {
       $revert_permission = TRUE;
     }
-    if (user_access('delete own user revisions') || user_access('delete user revisions') || user_access('administer users')) {
+    if (user_access('delete own user revisions') || user_access('delete user revisions')) {
       $delete_permission = TRUE;
     }
   }
   else {
-    if (user_access('revert user revisions') || user_access('administer users')) {
+    if (user_access('revert user revisions')) {
       $revert_permission = TRUE;
     }
-    if (user_access('delete user revisions') || user_access('administer users')) {
+    if (user_access('delete user revisions')) {
       $delete_permission = TRUE;
     }
   }

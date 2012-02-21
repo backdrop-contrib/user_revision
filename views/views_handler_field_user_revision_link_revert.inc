@@ -11,7 +11,7 @@ class views_handler_field_user_revision_link_revert extends views_handler_field_
   }
 
   function access() {
-    return user_access('revert user revisions') || user_access('administer users');
+    return user_access('revert user revisions');
   }
 
   function render_link($data, $values) {
