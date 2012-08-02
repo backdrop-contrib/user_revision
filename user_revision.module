@@ -233,6 +233,26 @@ function user_revision_entity_info_alter(&$entity_info) {
   }
 }
 
+
+/**
+ * Implements hook_entity_property_info_alter().
+ * Play nice with the entity module.
+ */
+function user_revision_entity_property_info_alter(&$info) {
+  $info['user']['properties']['vid'] = array(
+    'label' => t('Revision ID'),
+    'type' => 'integer',
+    'description' => t('The unique ID of the user\'s revision.'),
+    'schema field' => 'vid',
+  );
+  $info['user']['properties']['ip'] = array(
+    'label' => t('IP'),
+    'type' => 'text',
+    'description' => t('The user\'s ip address.'),
+    'schema field' => 'ip',
+  );
+}
+
 /**
  * Implements hook_form_alter().
  */
@@ -426,5 +446,3 @@ function user_revision_delete($revision) {
   field_attach_delete_revision('user', $revision);
   return TRUE;
 }
-
-
