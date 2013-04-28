@@ -332,16 +332,10 @@ function user_revision_show($user, $vid) {
 
 /**
  * Load a revision.
- */
-function user_revision_load($uid, $vid) {
-  return user_revision_user_load($uid, $vid);
-}
-
-/**
- * Implements hook_user_load().
+ *
  * Loads a user object with revision support
  */
-function user_revision_user_load($uid, $vid = NULL, $reset = FALSE) {
+function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
   if (isset($vid)) {
     $conditions = (isset($vid) ? array('vid' => $vid) : array());
     $users = user_load_multiple(array($uid), $conditions, $reset);
