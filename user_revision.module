@@ -1,6 +1,4 @@
 <?php
-// $Id: 
-
 /**
  * @file
  * Enables user revision.
@@ -12,7 +10,7 @@
 function user_revision_views_api() {
   return array(
     'api' => '3.0-alpha1',
-    'path' => drupal_get_path('module', 'user_revision') . '/views', 
+    'path' => drupal_get_path('module', 'user_revision') . '/views',
   );
 }
 
@@ -28,18 +26,52 @@ function user_revision_disable() {
   }
 }
 
+/**
+ * Implements hook_enable().
+ */
 function user_revision_enable() {
-  $sql =  'INSERT INTO {user_revision} ';
-  $sql .= '(uid, vid, log, timestamp, authorid, name, mail,
-          theme, signature, signature_format, status, timezone,
-          language, picture, data)';
-  $sql .= ' SELECT u.uid, u.vid, \'\', UNIX_TIMESTAMP(), u.uid, u.name, u.mail,
-          u.theme, u.signature, u.signature_format, u.status, u.timezone,
-          u.language, u.picture, u.data
-          FROM {users} u';
-  $sql .= ' WHERE u.vid=0 AND u.uid <> 0';
-  db_query($sql);
-  db_query("UPDATE {users} u SET vid = (SELECT vid FROM {user_revision} v WHERE v.uid = u.uid) WHERE u.vid = 0 AND u.uid <> 0");
+  $users = db_select('users', 'u')
+    ->fields('u', array('uid', 'vid', 'name', 'mail', 'theme', 'signature', 'signature_format', 'status', 'timezone', 'language', 'picture', 'data'))
+    ->condition('u.vid', 0)
+    ->condition('u.uid', 0, '!=')
+    ->execute()
+    ->fetchAll();
+  foreach ($users as $user) {
+    db_insert('user_revision')
+      ->fields(array(
+        'uid' => $user->uid,
+        'log' => '',
+        'timestamp' => REQUEST_TIME,
+        'authorid' => $user->uid,
+        'name' => $user->name,
+        'mail' => $user->mail,
+        'theme' => $user->theme,
+        'signature' => $user->signature,
+        'signature_format' => $user->signature_format,
+        'status' => $user->status,
+        'timezone' => $user->timezone,
+        'language' => $user->language,
+        'picture' => $user->picture,
+        'data' => $user->data,
+      ))
+      ->execute();
+  }
+
+  $user_revisions = db_select('user_revision', 'ur')
+    ->fields('ur', array('uid', 'vid'))
+    ->execute()
+    ->fetchAll();
+  // This foreach updates each user only once as for each user there
+  // can be only 1 record in the {users} table with vid = 0.
+  foreach ($user_revisions as $user_revision) {
+    db_update('users')
+      ->condition('uid', $user_revision->uid)
+      ->condition('uid', 0, '!=')
+      ->condition('vid', 0)
+      ->fields(array('vid' => $user_revision->vid))
+      ->execute();
+  }
+
   module_load_include('install', 'user_revision');
   $schema['users'] = array();
   user_revision_schema_alter($schema);
@@ -116,7 +148,11 @@ function _user_revision_access($u, $perm){
       $access = user_access($permission) || $access;
     }
   }
-  $count = db_query("SELECT count(*) FROM {user_revision} WHERE uid = :uid", array(':uid' => $u->uid))->fetchField();
+  $count= db_select('user_revision', 'ur')
+    ->condition('ur.uid', $u->uid)
+    ->countQuery()
+    ->execute()
+    ->fetchField();
   return $access && ($count > 1);
 }
 
@@ -226,7 +262,7 @@ function user_revision_entity_info_alter(&$entity_info) {
   $entity_info['user']['revision table'] = 'user_revision';
   $entity_info['user']['entity keys']['revision'] = 'vid';
   $entity_info['user']['controller class'] = 'UserRevisionController';
-  
+
   $schema = user_revision_schema();
   foreach ($schema['user_revision']['fields'] as $k => $field) {
     $entity_info['user']['schema_fields_sql']['revision table'][] = $k;
@@ -340,7 +376,11 @@ function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
     $conditions = (isset($vid) ? array('vid' => $vid) : array());
     $users = user_load_multiple(array($uid), $conditions, $reset);
     foreach($users as $key => $user){
-      $fid = db_query("SELECT picture FROM {user_revision} WHERE vid = :vid", array(':vid' => $vid))->fetchField();
+      $fid= db_select('user_revision', 'ur')
+        ->condition('ur.vid', $vid)
+        ->fields('ur', array('picture'))
+        ->execute()
+        ->fetchField();
       if ($fid) {
         $file = new stdClass();
         $file->fid = $fid;
@@ -355,7 +395,10 @@ function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
  * Implements hook_user_insert().
  */
 function user_revision_user_insert(&$edit, $account, $category){
-  db_query("UPDATE {user_revision} SET uid = :uid WHERE vid = :vid", array(':uid' => $account->uid, ':vid' => $account->vid));
+  db_update('user_revision')
+    ->condition('vid', $account->vid)
+    ->fields(array('uid' => $account->uid))
+    ->execute();
 }
 
 /**
@@ -387,7 +430,11 @@ function user_revision_user_presave(&$edit, $account, $category) {
  * Implements hook_user_delete().
  */
 function user_revision_user_delete($account) {
-  $revisions = db_query('SELECT vid FROM {user_revision} WHERE uid = :uid', array(':uid' => $account->uid))->fetchCol();
+  $revisions = db_select('user_revision', 'ur')
+    ->condition('ur.uid', $account->uid)
+    ->fields('ur', array('vid'))
+    ->execute()
+    ->fetchCol();
   foreach ($revisions as $revision_id) {
     $revision = user_revision_load($account->uid, $revision_id);
     user_revision_delete($revision);
@@ -422,7 +469,17 @@ function _user_save_revision(&$edit, $update = NULL) {
  */
 function user_revision_list($user) {
   $revisions = array();
-  $result = db_query('SELECT r.vid, r.name, r.log, r.authorid,r.ip, u.vid AS current_vid, r.uid, r.timestamp, a.name FROM {user_revision} r LEFT JOIN {users} u ON u.vid = r.vid LEFT JOIN {users} a ON r.authorid = a.uid WHERE r.uid = :uid ORDER BY r.vid DESC', array(':uid' => $user->uid));
+  $result = db_select('user_revision', 'ur')
+    ->fields('ur', array('vid', 'name', 'log', 'authorid', 'ip', 'uid', 'timestamp'));
+  $user_alias = $result->leftJoin('users', 'u', "%alias.vid = ur.vid");
+  $user_alias2 = $result->leftJoin('users', 'u2', "%alias.uid = ur.authorid");
+  $result->addField($user_alias, 'vid', 'current_vid');
+  $result->addField($user_alias2, 'name', 'current_name');
+
+  $result = $result->condition('ur.uid', $user->uid)
+  ->orderBy('ur.vid', 'DESC')
+    ->execute()
+    ->fetchAll();
   foreach ($result as $revision) {
     $revisions[$revision->vid] = $revision;
   }

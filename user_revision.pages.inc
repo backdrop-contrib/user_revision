@@ -107,7 +107,7 @@ function user_revision_delete_confirm_submit($form, &$form_state) {
   watchdog('user', 'deleted %title revision %revision.', array('%title' => $user_revision->name, '%revision' => $user_revision->vid));
   drupal_set_message(t('Revision from %revision-date %title has been deleted.', array('%revision-date' => format_date($user_revision->revision_timestamp), '%title' => $user_revision->name)));
   $form_state['redirect'] = 'user/' . $user_revision->uid;
-  if (db_query('SELECT COUNT(vid) FROM {user_revision} WHERE uid = :uid', array(':uid' => $user_revision->uid))->fetchField() > 1) {
+  if (db_select('user_revision', 'ur')->condition('ur.uid', $user_revision->uid)->countQuery()->execute()->fetchField() > 1) {
     $form_state['redirect'] .= '/revisions';
   }
 }
