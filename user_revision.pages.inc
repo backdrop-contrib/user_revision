@@ -47,7 +47,7 @@ function user_revision_overview($viewed_user) {
           '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"),
           '!username' => theme('username', array('account' => $revision)))
         ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
-       'class' => array('revision-current'),
+        'class' => array('revision-current'),
       );
       $operations[] = array(
         'data' => drupal_placeholder(t('current revision')),

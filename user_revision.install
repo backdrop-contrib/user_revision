@@ -6,6 +6,84 @@
  */
 
 /**
+ * Implements hook_disable().
+ */
+function user_revision_disable() {
+  module_load_include('install', 'user_revision');
+  $schema['users'] = array();
+  user_revision_schema_alter($schema);
+  foreach ($schema['users']['unique keys'] as $name => $spec) {
+    db_drop_unique_key('users', $name);
+  }
+}
+
+/**
+ * Implements hook_enable().
+ */
+function user_revision_enable() {
+  $users = db_select('users', 'u')
+    ->fields('u', array(
+      'uid',
+      'vid',
+      'name',
+      'mail',
+      'theme',
+      'signature',
+      'signature_format',
+      'status',
+      'timezone',
+      'language',
+      'picture',
+      'data',
+    ))
+    ->condition('u.vid', 0)
+    ->condition('u.uid', 0, '!=')
+    ->execute()
+    ->fetchAll();
+  foreach ($users as $user) {
+    db_insert('user_revision')
+      ->fields(array(
+        'uid' => $user->uid,
+        'log' => '',
+        'timestamp' => REQUEST_TIME,
+        'authorid' => $user->uid,
+        'name' => $user->name,
+        'mail' => $user->mail,
+        'theme' => $user->theme,
+        'signature' => $user->signature,
+        'signature_format' => $user->signature_format,
+        'status' => $user->status,
+        'timezone' => $user->timezone,
+        'language' => $user->language,
+        'picture' => $user->picture,
+        'data' => $user->data,
+      ))
+      ->execute();
+  }
+
+  $user_revisions = db_select('user_revision', 'ur')
+    ->fields('ur', array('uid', 'vid'))
+    ->execute()
+    ->fetchAll();
+  // This foreach updates each user only once as for each user there
+  // can be only 1 record in the {users} table with vid = 0.
+  foreach ($user_revisions as $user_revision) {
+    db_update('users')
+      ->condition('uid', $user_revision->uid)
+      ->condition('uid', 0, '!=')
+      ->condition('vid', 0)
+      ->fields(array('vid' => $user_revision->vid))
+      ->execute();
+  }
+
+  $schema['users'] = array();
+  user_revision_schema_alter($schema);
+  foreach ($schema['users']['unique keys'] as $name => $spec) {
+    db_add_unique_key('users', $name, $spec);
+  }
+}
+
+/**
  * Implements hook_schema().
  */
 function user_revision_schema() {
@@ -224,7 +302,7 @@ function user_revision_install() {
 }
 
 /**
- * Implements of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function user_revision_uninstall() {
   module_load_include('module', 'user_revision');

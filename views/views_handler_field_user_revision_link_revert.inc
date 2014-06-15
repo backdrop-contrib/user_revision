@@ -1,20 +1,34 @@
 <?php
 
 /**
+ * @file
+ * Provide field handler to render a revert link.
+ */
+
+/**
  * Field handler to present a link to revert a user to a revision.
  */
 class views_handler_field_user_revision_link_revert extends views_handler_field_user_link {
-  function construct() {
+  /**
+   * {@inheritdoc}
+   */
+  public function construct() {
     parent::construct();
     $this->additional_fields['uid'] = 'uid';
     $this->additional_fields['vid'] = 'vid';
   }
 
-  function access() {
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
     return user_access('revert user revisions');
   }
 
-  function render_link($data, $values) {
+  /**
+   * {@inheritdoc}
+   */
+  public function render_link($data, $values) {
     if (!$this->access()) {
       return;
     }

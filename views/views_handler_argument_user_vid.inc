@@ -12,7 +12,7 @@ class views_handler_argument_user_vid extends views_handler_argument_numeric {
   /**
    * Override the behavior of title(). Get the title of the revision.
    */
-  function title_query() {
+  public function title_query() {
     $names = array();
     $result = db_select('user_revision', 'ur')
       ->fields('ur', array('name'))

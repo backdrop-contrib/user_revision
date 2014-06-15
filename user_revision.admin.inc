@@ -1,9 +1,12 @@
 <?php
+/**
+ * @file
+ * Admin settings for user revision.
+ */
 
 /**
  * Form builder; Configure user revision settings for this site.
  */
-
 function user_revision_admin_settings() {
   $form['user_revision_by_default'] = array(
     '#type' => 'checkbox',

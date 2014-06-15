@@ -76,14 +76,14 @@ function user_revision_views_data() {
   );
 
   $data['user_revision']['uid'] = array(
-      'title' => t('Uid'),
-      'help' => t('The uid field of the user revisions table'),
-      'relationship' => array(
-        'handler' => 'views_handler_relationship',
-        'base' => 'users',
-        'base field' => 'uid',
-        'title' => t('User'),
-        'label' => t('Get all revisions from an user.'),
+    'title' => t('Uid'),
+    'help' => t('The uid field of the user revisions table'),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'users',
+      'base field' => 'uid',
+      'title' => t('User'),
+      'label' => t('Get all revisions from an user.'),
     ),
   );
 
@@ -95,7 +95,7 @@ function user_revision_views_data() {
       'field' => 'name',
       'handler' => 'views_handler_field_user_revision',
       'click sortable' => TRUE,
-     ),
+    ),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -113,7 +113,7 @@ function user_revision_views_data() {
     'help' => t('The log message entered when the revision was created.'),
     'field' => array(
       'handler' => 'views_handler_field_xss',
-     ),
+    ),
     'filter' => array(
       'handler' => 'views_handler_filter_string',
     ),
