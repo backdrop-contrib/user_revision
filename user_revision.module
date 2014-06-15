@@ -416,6 +416,13 @@ function user_revision_user_presave(&$edit, $account, $category) {
   $edit['timestamp'] = REQUEST_TIME;
   $edit['authorid'] = $user->uid;
 
+  // Allow this module to be extended.
+  $custom_fields = _user_revision_get_custom_fields($edit);
+  foreach ($custom_fields as $field => $value) {
+    $edit[$field] = $value;
+  }
+  $edit = array_merge((array) $custom_fields, $edit);
+
   if ((isset($edit['revision']) && $edit['revision'] == 1)
     || $account->is_new
     || (!isset($edit['revision']) && variable_get('user_revision_by_default', 1))) {
@@ -430,6 +437,19 @@ function user_revision_user_presave(&$edit, $account, $category) {
     _user_save_revision($edit, array('vid'));
   }
 }
+
+ /**
+ * Adds a hook_user_revision_custom_fields() function.
+ */
+function _user_revision_get_custom_fields($edit = NULL) {
+  $custom_fields = array();
+  foreach (module_implements('user_revision_custom_fields') as $module) {
+    $invoke = module_invoke($module, 'user_revision_custom_fields', $edit);
+    $custom_fields = array_merge($invoke, $custom_fields);
+  }
+  return $custom_fields;
+}
+
 
 /**
  * Implements hook_user_delete().
