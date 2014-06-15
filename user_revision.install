@@ -226,7 +226,8 @@ function user_revision_uninstall() {
 }
 
 /**
- * Change the weight of User Revision Module so all user hooks are executed last.
+ * Change the weight of User Revision Module so all hooks are executed last.
+ *
  * This way all changes made in hook_user_presave etc. won't be lost.
  */
 function user_revision_update_7001() {

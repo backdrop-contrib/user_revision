@@ -89,7 +89,10 @@ function user_revision_menu() {
     'page callback' => 'user_revision_overview',
     'page arguments' => array(1),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, array('view user revisions', 'view own user revisions')),
+    'access arguments' => array(1, array(
+      'view user revisions',
+      'view own user revisions',
+    )),
     'weight' => 2,
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_revision.pages.inc',
@@ -99,7 +102,10 @@ function user_revision_menu() {
     'page callback' => 'user_revision_show',
     'page arguments' => array(1, 3),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, array('view user revisions', 'view own user revisions')),
+    'access arguments' => array(1, array(
+      'view user revisions',
+      'view own user revisions',
+    )),
   );
   $items['user/%user_revision/revisions/%/revert'] = array(
     'title' => 'Revert to earlier revision',
@@ -107,7 +113,10 @@ function user_revision_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_revert_confirm', 1),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, array('revert user revisions', 'revert own user revisions')),
+    'access arguments' => array(1, array(
+      'revert user revisions',
+      'revert own user revisions',
+    )),
     'file' => 'user_revision.pages.inc',
   );
   $items['user/%user_revision/revisions/%/delete'] = array(
@@ -116,7 +125,10 @@ function user_revision_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_delete_confirm', 1),
     'access callback' => '_user_revision_access',
-    'access arguments' => array(1, array('delete user revisions', 'delete own user revisions')),
+    'access arguments' => array(1, array(
+      'delete user revisions',
+      'delete own user revisions',
+    )),
     'file' => 'user_revision.pages.inc',
   );
   $items['admin/config/people/revisions'] = array(
@@ -132,19 +144,19 @@ function user_revision_menu() {
 }
 
 /**
- * Access callback
+ * Access callback.
  */
-function _user_revision_access($u, $perm){
+function _user_revision_access($u, $perm) {
   global $user;
-  if(!is_array($perm)){
+  if (!is_array($perm)) {
     $perm = array($perm);
   }
   $access = FALSE;
-  foreach($perm as $permission){
-    if($u->uid == $user->uid){
+  foreach ($perm as $permission) {
+    if ($u->uid == $user->uid) {
       $access = user_access($permission) || $access;
     }
-    elseif (strpos($permission, 'own') === FALSE){
+    elseif (strpos($permission, 'own') === FALSE) {
       $access = user_access($permission) || $access;
     }
   }
@@ -161,7 +173,7 @@ function _user_revision_access($u, $perm){
  */
 function user_revision_permission() {
   return array(
-    'view user revisions' =>  array(
+    'view user revisions' => array(
       'title' => t('View revisions'),
       'restrict access' => TRUE,
     ),
@@ -174,9 +186,9 @@ function user_revision_permission() {
     ),
     'choose user revisions' => array(
       'title' => t('Choose to create revisions'),
-      'description' => t('Allow users to create user revisions')
+      'description' => t('Allow users to create user revisions'),
     ),
-    'view own user revisions' =>  array(
+    'view own user revisions' => array(
       'title' => t('View own revisions'),
       'description' => t('Allow users to view their own user revisions'),
     ),
@@ -258,7 +270,7 @@ function user_revision_schema_alter(&$schema) {
  * Implements hook_entity_info_alter().
  */
 function user_revision_entity_info_alter(&$entity_info) {
-  module_load_install ('user_revision');
+  module_load_install('user_revision');
   $entity_info['user']['revision table'] = 'user_revision';
   $entity_info['user']['entity keys']['revision'] = 'vid';
   $entity_info['user']['controller class'] = 'UserRevisionController';
@@ -307,7 +319,7 @@ function user_revision_form_user_register_form_alter(&$form, &$form_state, $form
  * Implements hook_form_alter().
  */
 function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  if(!isset($form['#user_category']) || (isset($form['#user_category']) && $form['#user_category'] == 'account')){
+  if (!isset($form['#user_category']) || (isset($form['#user_category']) && $form['#user_category'] == 'account')) {
     $account = $form_state['user'];
     $form['revision_information'] = array(
       '#type' => 'fieldset',
@@ -380,7 +392,7 @@ function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
   if (isset($vid)) {
     $conditions = (isset($vid) ? array('vid' => $vid) : array());
     $users = user_load_multiple(array($uid), $conditions, $reset);
-    foreach($users as $key => $user){
+    foreach ($users as $key => $user) {
       $fid= db_select('user_revision', 'ur')
         ->condition('ur.vid', $vid)
         ->fields('ur', array('picture'))
@@ -399,7 +411,7 @@ function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
 /**
  * Implements hook_user_insert().
  */
-function user_revision_user_insert(&$edit, $account, $category){
+function user_revision_user_insert(&$edit, $account, $category) {
   db_update('user_revision')
     ->condition('vid', $account->vid)
     ->fields(array('uid' => $account->uid))
@@ -412,7 +424,7 @@ function user_revision_user_insert(&$edit, $account, $category){
 function user_revision_user_presave(&$edit, $account, $category) {
   global $user;
   $edit['log'] = empty($edit['log']) ? '' : $edit['log'];
-  $edit = array_merge((array)$account, $edit);
+  $edit = array_merge((array) $account, $edit);
   $edit['timestamp'] = REQUEST_TIME;
   $edit['authorid'] = $user->uid;
 
@@ -471,22 +483,22 @@ function user_revision_user_delete($account) {
  */
 function _user_save_revision(&$edit, $update = NULL) {
   $picture = NULL;
-  if(isset($edit['picture']) && is_object($edit['picture'])){
+  if (isset($edit['picture']) && is_object($edit['picture'])) {
     $picture = $edit['picture'];
     $edit['picture'] = $picture->fid;
   }
-  // add timestamp and author
+  // Add timestamp and author.
   if (isset($update)) {
     $res = drupal_write_record('user_revision', $edit, $update);
   }
   else {
     $res = drupal_write_record('user_revision', $edit);
   }
-  if(is_object($picture)){
+  if (is_object($picture)) {
     file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
     $edit['picture'] = $picture;
   }
-  // pass new vid to user_save?
+  // Pass new vid to user_save?
 }
 
 /**
@@ -514,8 +526,8 @@ function user_revision_list($user) {
 /**
  * Delete a user revision.
  *
- * @param $revision_id
- *   The revision ID to delete.
+ * @param object $revision
+ *   The revision to delete, should have at least uid and vid.
  */
 function user_revision_delete($revision) {
   db_delete('user_revision')
