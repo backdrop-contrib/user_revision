@@ -1,7 +1,5 @@
 <?php
 
-// $Id
-
 /**
  * Form builder; Configure user revsion settings for this site.
  */
