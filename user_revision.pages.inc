@@ -12,13 +12,16 @@ function user_revision_overview($viewed_user) {
   global $user;
   drupal_set_title(t('Revisions for %title', array('%title' => $viewed_user->name)), PASS_THROUGH);
 
-  $header = array(t('Revision'), array('data' => t('Operations'), 'colspan' => 2));
+  $header = array(
+    t('Revision'),
+    array('data' => t('Operations'), 'colspan' => 2),
+  );
 
   $revisions = user_revision_list($viewed_user);
   $rows = array();
   $revert_permission = FALSE;
   $delete_permission = FALSE;
-  if($user->uid == $viewed_user->uid){
+  if ($user->uid == $viewed_user->uid) {
     if (user_access('revert own user revisions') || user_access('revert user revisions')) {
       $revert_permission = TRUE;
     }
@@ -39,26 +42,38 @@ function user_revision_overview($viewed_user) {
     $row = array();
     $operations = array();
     if ($revision->current_vid > 0) {
-      $row[] = array('data' => t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"), '!username' => theme('username', array('account' => $revision))))
-                               . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
-                     'class' => array('revision-current'));
-      $operations[] = array('data' => drupal_placeholder(t('current revision')), 'class' => array('revision-current'), 'colspan' => 2);
+      $row[] = array(
+        'data' => t('!date by !username', array(
+          '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"),
+          '!username' => theme('username', array('account' => $revision)))
+        ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
+       'class' => array('revision-current'),
+      );
+      $operations[] = array(
+        'data' => drupal_placeholder(t('current revision')),
+        'class' => array('revision-current'),
+        'colspan' => 2,
+      );
     }
     else {
-      $row[] = t('!date by !username', array('!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid/revisions/$revision->vid/view"), '!username' => theme('username', array('account' => $revision))))
-               . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '');
+      $row[] = t('!date by !username', array(
+        '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid/revisions/$revision->vid/view"),
+        '!username' => theme('username', array('account' => $revision)))
+      ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '');
+
       if ($revert_permission) {
         $operations[] = l(t('revert'), "user/$viewed_user->uid/revisions/$revision->vid/revert");
       }
       else {
-        //empty row for theming purposes
+        // Empty row for theming purposes.
         $operations[] = "";
       }
+
       if ($delete_permission) {
         $operations[] = l(t('delete'), "user/$viewed_user->uid/revisions/$revision->vid/delete");
       }
       else {
-        //empty row for theming purposes
+        // Empty row for theming purposes.
         $operations[] = "";
       }
     }
@@ -82,11 +97,14 @@ function user_revision_revert_confirm($form, $form_state, $user_revision) {
   return confirm_form($form, t('Are you sure you want to revert to the revision from %revision-date?', array('%revision-date' => format_date($user_revision->revision_timestamp))), 'user/' . $user_revision->uid . '/revisions', '', t('Revert'), t('Cancel'));
 }
 
+/**
+ * Revert a revision.
+ */
 function user_revision_revert_confirm_submit($form, &$form_state) {
   $user_revision = $form['#user_revision'];
   $user_revision->revision = 1;
   $user_revision->log = t('Copy of the revision from %date.', array('%date' => format_date($user_revision->revision_timestamp)));
-  user_save($user_revision, (array)$user_revision);
+  user_save($user_revision, (array) $user_revision);
   watchdog('user', 'reverted %title revision %revision.', array('%title' => $user_revision->name, '%revision' => $user_revision->vid));
   drupal_set_message(t('%title has been reverted back to the revision from %revision-date.', array('%title' => $user_revision->name, '%revision-date' => format_date($user_revision->revision_timestamp))));
   $form_state['redirect'] = 'user/' . $user_revision->uid . '/revisions';
@@ -100,6 +118,9 @@ function user_revision_delete_confirm($form, $form_state, $user_revision) {
   return confirm_form($form, t('Are you sure you want to delete the revision from %revision-date?', array('%revision-date' => format_date($user_revision->revision_timestamp))), 'user/' . $user_revision->uid . '/revisions', t('This action cannot be undone.'), t('Delete'), t('Cancel'));
 }
 
+/**
+ * Delete a revision.
+ */
 function user_revision_delete_confirm_submit($form, &$form_state) {
   $user_revision = $form['#user_revision'];
   user_revision_delete($user_revision);

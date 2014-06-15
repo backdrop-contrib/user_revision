@@ -1,7 +1,7 @@
 <?php
-// $Id: 
+
 /**
- * Field handler to present a link to revert a user to a revision
+ * Field handler to present a link to revert a user to a revision.
  */
 class views_handler_field_user_revision_link_revert extends views_handler_field_user_link {
   function construct() {

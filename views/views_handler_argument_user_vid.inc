@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Provide user vid argument handler.
@@ -8,8 +9,6 @@
  * Argument handler to accept a user revision id.
  */
 class views_handler_argument_user_vid extends views_handler_argument_numeric {
-  // No constructor is necessary.
-
   /**
    * Override the behavior of title(). Get the title of the revision.
    */
@@ -26,4 +25,3 @@ class views_handler_argument_user_vid extends views_handler_argument_numeric {
     return $names;
   }
 }
-

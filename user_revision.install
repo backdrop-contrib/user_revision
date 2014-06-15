@@ -146,7 +146,7 @@ function user_revision_schema() {
  */
 function user_revision_install() {
   $schema['users'] = array();
-  include_once('user_revision.module');
+  include_once 'user_revision.module';
   user_revision_schema_alter($schema);
   foreach ($schema['users']['fields'] as $name => $spec) {
     db_add_field('users', $name, $spec);
@@ -173,15 +173,28 @@ function user_revision_install() {
     ))
   ->execute();
 
-  // Make sure data is correct for anon user
+  // Make sure data is correct for anon user.
   db_update('user_revision')
     ->condition('uid', 0)
     ->fields(array('vid' => 0))
     ->execute();
 
-  // Add all users to the revision table
+  // Add all users to the revision table.
   $users = db_select('users', 'u')
-    ->fields('u', array('uid', 'vid', 'name', 'mail', 'theme', 'signature', 'signature_format', 'status', 'timezone', 'language', 'picture', 'data'))
+    ->fields('u', array(
+      'uid',
+      'vid',
+      'name',
+      'mail',
+      'theme',
+      'signature',
+      'signature_format',
+      'status',
+      'timezone',
+      'language',
+      'picture',
+      'data',
+    ))
     ->condition('u.uid', 0, '!=')
     ->execute()
     ->fetchAll();
@@ -211,8 +224,8 @@ function user_revision_install() {
 }
 
 /**
-* Implementation of hook_uninstall().
-*/
+ * Implements of hook_uninstall().
+ */
 function user_revision_uninstall() {
   module_load_include('module', 'user_revision');
   $schema['users'] = array();

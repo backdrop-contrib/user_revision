@@ -1,5 +1,5 @@
 <?php
-// $Id:
+
 /**
  * @file
  * Contains the basic 'user_revision' field handler.
@@ -40,7 +40,7 @@ class views_handler_field_user_revision extends views_handler_field_user {
   function render_link($data, $values) {
     if (!empty($this->options['link_to_user_revision']) && $data !== NULL && $data !== '') {
       $this->options['alter']['make_link'] = TRUE;
-      $this->options['alter']['path'] = "user/" . $values->{$this->aliases['uid']} . '/revisions/' . $values->{$this->aliases['vid']} .'/view';
+      $this->options['alter']['path'] = "user/" . $values->{$this->aliases['uid']} . '/revisions/' . $values->{$this->aliases['vid']} . '/view';
     }
     else {
       return parent::render_link($data, $values);
@@ -48,4 +48,3 @@ class views_handler_field_user_revision extends views_handler_field_user {
     return $data;
   }
 }
-

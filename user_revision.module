@@ -31,7 +31,20 @@ function user_revision_disable() {
  */
 function user_revision_enable() {
   $users = db_select('users', 'u')
-    ->fields('u', array('uid', 'vid', 'name', 'mail', 'theme', 'signature', 'signature_format', 'status', 'timezone', 'language', 'picture', 'data'))
+    ->fields('u', array(
+      'uid',
+      'vid',
+      'name',
+      'mail',
+      'theme',
+      'signature',
+      'signature_format',
+      'status',
+      'timezone',
+      'language',
+      'picture',
+      'data',
+    ))
     ->condition('u.vid', 0)
     ->condition('u.uid', 0, '!=')
     ->execute()
@@ -92,7 +105,8 @@ function user_revision_menu() {
     'access arguments' => array(1, array(
       'view user revisions',
       'view own user revisions',
-    )),
+      ),
+    ),
     'weight' => 2,
     'type' => MENU_LOCAL_TASK,
     'file' => 'user_revision.pages.inc',
@@ -105,7 +119,8 @@ function user_revision_menu() {
     'access arguments' => array(1, array(
       'view user revisions',
       'view own user revisions',
-    )),
+      ),
+    ),
   );
   $items['user/%user_revision/revisions/%/revert'] = array(
     'title' => 'Revert to earlier revision',
@@ -116,7 +131,8 @@ function user_revision_menu() {
     'access arguments' => array(1, array(
       'revert user revisions',
       'revert own user revisions',
-    )),
+      ),
+    ),
     'file' => 'user_revision.pages.inc',
   );
   $items['user/%user_revision/revisions/%/delete'] = array(
@@ -128,7 +144,8 @@ function user_revision_menu() {
     'access arguments' => array(1, array(
       'delete user revisions',
       'delete own user revisions',
-    )),
+      ),
+    ),
     'file' => 'user_revision.pages.inc',
   );
   $items['admin/config/people/revisions'] = array(
@@ -160,7 +177,7 @@ function _user_revision_access($u, $perm) {
       $access = user_access($permission) || $access;
     }
   }
-  $count= db_select('user_revision', 'ur')
+  $count = db_select('user_revision', 'ur')
     ->condition('ur.uid', $u->uid)
     ->countQuery()
     ->execute()
@@ -230,6 +247,7 @@ class UserRevisionController extends UserController {
       $queried_users[$key]->revision = 1;
     }
   }
+
   protected function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
     $query = parent::buildQuery($ids, $conditions, $revision_id);
     $fields =& $query->getFields();
@@ -284,7 +302,6 @@ function user_revision_entity_info_alter(&$entity_info) {
 
 /**
  * Implements hook_entity_property_info_alter().
- * Play nice with the entity module.
  */
 function user_revision_entity_property_info_alter(&$info) {
   $info['user']['properties']['vid'] = array(
@@ -393,7 +410,7 @@ function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
     $conditions = (isset($vid) ? array('vid' => $vid) : array());
     $users = user_load_multiple(array($uid), $conditions, $reset);
     foreach ($users as $key => $user) {
-      $fid= db_select('user_revision', 'ur')
+      $fid = db_select('user_revision', 'ur')
         ->condition('ur.vid', $vid)
         ->fields('ur', array('picture'))
         ->execute()
@@ -450,7 +467,7 @@ function user_revision_user_presave(&$edit, $account, $category) {
   }
 }
 
- /**
+/**
  * Adds a hook_user_revision_custom_fields() function.
  */
 function _user_revision_get_custom_fields($edit = NULL) {
@@ -489,10 +506,10 @@ function _user_save_revision(&$edit, $update = NULL) {
   }
   // Add timestamp and author.
   if (isset($update)) {
-    $res = drupal_write_record('user_revision', $edit, $update);
+    drupal_write_record('user_revision', $edit, $update);
   }
   else {
-    $res = drupal_write_record('user_revision', $edit);
+    drupal_write_record('user_revision', $edit);
   }
   if (is_object($picture)) {
     file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
@@ -507,7 +524,15 @@ function _user_save_revision(&$edit, $update = NULL) {
 function user_revision_list($user) {
   $revisions = array();
   $result = db_select('user_revision', 'ur')
-    ->fields('ur', array('vid', 'name', 'log', 'authorid', 'ip', 'uid', 'timestamp'));
+    ->fields('ur', array(
+      'vid',
+      'name',
+      'log',
+      'authorid',
+      'ip',
+      'uid',
+      'timestamp',
+    ));
   $user_alias = $result->leftJoin('users', 'u', "%alias.vid = ur.vid");
   $user_alias2 = $result->leftJoin('users', 'u2', "%alias.uid = ur.authorid");
   $result->addField($user_alias, 'vid', 'current_vid');

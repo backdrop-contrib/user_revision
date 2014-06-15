@@ -1,7 +1,7 @@
 <?php
-// $Id:
+
 /**
- * Field handler to present a link to delete a user to a revision
+ * Field handler to present a link to delete a user to a revision.
  */
 class views_handler_field_user_revision_link_delete extends views_handler_field_user_link {
   function construct() {
@@ -27,4 +27,3 @@ class views_handler_field_user_revision_link_delete extends views_handler_field_
     return $text;
   }
 }
-

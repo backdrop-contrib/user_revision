@@ -1,7 +1,6 @@
 name = User revision
 description = Adds revision support for users.
 package = Other
-version = VERSION
 core = 7.x
 
 configure = admin/config/people/revisions
