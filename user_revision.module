@@ -165,7 +165,7 @@ class UserRevisionController extends UserController {
   /**
    * {@inheritdoc}
    */
-  protected function attachLoad(&$queried_users, $revision_id = FALSE) {
+  function attachLoad(&$queried_users, $revision_id = FALSE) {
     parent::attachLoad($queried_users, $revision_id);
     foreach ($queried_users as $key => $record) {
       $queried_users[$key]->revision = 1;
@@ -175,7 +175,7 @@ class UserRevisionController extends UserController {
   /**
    * {@inheritdoc}
    */
-  protected function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
+  function buildQuery($ids, $conditions = array(), $revision_id = FALSE) {
     $query = parent::buildQuery($ids, $conditions, $revision_id);
     $fields =& $query->getFields();
     unset($fields['timestamp']);
