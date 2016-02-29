@@ -249,7 +249,7 @@ function user_revision_install() {
       'language' => '',
       'picture' => 0,
     ))
-  ->execute();
+    ->execute();
 
   // Make sure data is correct for anon user.
   db_update('user_revision')
@@ -257,48 +257,32 @@ function user_revision_install() {
     ->fields(array('vid' => 0))
     ->execute();
 
-  // Add all users to the revision table.
-  $users = db_select('users', 'u')
-    ->fields('u', array(
-      'uid',
-      'vid',
-      'name',
-      'mail',
-      'theme',
-      'signature',
-      'signature_format',
-      'status',
-      'timezone',
-      'language',
-      'picture',
-      'data',
-    ))
-    ->condition('u.uid', 0, '!=')
-    ->execute()
-    ->fetchAll();
-  foreach ($users as $user) {
-    db_insert('user_revision')
-      ->fields(array(
-        'uid' => $user->uid,
-        'vid' => $user->vid,
-        'log' => '',
-        'timestamp' => REQUEST_TIME,
-        'authorid' => $user->uid,
-        'name' => $user->name,
-        'mail' => $user->mail,
-        'theme' => $user->theme,
-        'signature' => $user->signature,
-        'signature_format' => $user->signature_format,
-        'status' => $user->status,
-        'timezone' => $user->timezone,
-        'language' => $user->language,
-        'picture' => $user->picture,
-        'data' => $user->data,
-      ))
+  // Update weight of module in system table.
+  db_update('system')
+    ->fields(array('weight' => 99))
+    ->condition('name', 'user_revision', '=')
     ->execute();
-  }
 
-  db_update('system')->fields(array('weight' => 99))->condition('name', 'user_revision', '=')->execute();
+  // Prepare Batch API to add all users to the revision table.
+  $total_count = db_select('users', 'u')
+    ->condition('u.uid', 0, '!=')
+    ->countQuery()
+    ->execute()
+    ->fetchField();
+
+  $batch = array(
+    'operations' => array(
+      array('user_revision_table_init_data_batch_process', array($total_count)),
+    ),
+    'finished' => 'user_revision_table_init_data_batch_finished',
+    'title' => t('Updating revision table'),
+    'init_message' => t('Initializing.'),
+    'progress_message' => t('Completed @current of @total.'),
+    'error_message' => t('An error has occurred.'),
+    'file' => drupal_get_path('module', 'user_revision') . '/user_revision.batch.inc',
+  );
+
+  batch_set($batch);
 }
 
 /**

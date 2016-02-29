@@ -4,6 +4,9 @@
  * Enables user revision.
  */
 
+// Count of accounts that will be processed per batch iteration.
+define('USER_REVISION_BATCH_USERS_LIMIT', 100);
+
 /**
  * Implements hook_views_api().
  */
