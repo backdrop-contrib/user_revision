@@ -44,7 +44,7 @@ function user_revision_overview($viewed_user) {
     if ($revision->current_vid > 0) {
       $row[] = array(
         'data' => t('!date by !username', array(
-          '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"),
+          '!date' => format_date($revision->timestamp, 'short'),
           '!username' => theme('username', array('account' => $revision)))
         ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
         'class' => array('revision-current'),
@@ -57,7 +57,7 @@ function user_revision_overview($viewed_user) {
     }
     else {
       $row[] = t('!date by !username', array(
-        '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid/revisions/$revision->vid/view"),
+        '!date' => format_date($revision->timestamp, 'short'),
         '!username' => theme('username', array('account' => $revision)))
       ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '');
 
