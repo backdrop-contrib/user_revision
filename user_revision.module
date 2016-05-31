@@ -455,17 +455,16 @@ function user_revision_list($user) {
   $result = db_select('user_revision', 'ur')
     ->fields('ur', array(
       'vid',
-      'name',
       'log',
       'authorid',
       'ip',
-      'uid',
       'timestamp',
     ));
   $user_alias = $result->leftJoin('users', 'u', "%alias.vid = ur.vid");
   $user_alias2 = $result->leftJoin('users', 'u2', "%alias.uid = ur.authorid");
   $result->addField($user_alias, 'vid', 'current_vid');
   $result->addField($user_alias2, 'name', 'current_name');
+  $result->fields($user_alias2, array('uid', 'name'));
 
   $result = $result->condition('ur.uid', $user->uid)
   ->orderBy('ur.vid', 'DESC')
