@@ -271,24 +271,25 @@ function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_
     $form['revision_information'] = array(
       '#type' => 'fieldset',
       '#title' => t('Revision information'),
-      '#collapsible' => TRUE,
+      '#collapsible' => FALSE,
       '#attributes' => array(
         'class' => array('user-profile-form-revision-information'),
       ),
       '#weight' => 20,
       '#access' => user_access('choose user revisions'),
+    );
+    $form['revision_information']['revision'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Create new revision'),
+      '#default_value' => variable_get('user_revision_by_default', 1),
       '#states' => array(
         'invisible' => array(
           'input[name="revision"]' => array('checked' => TRUE),
         ),
       ),
     );
-    $form['revision_information']['revision'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Create new revision'),
-      '#default_value' => variable_get('user_revision_by_default', 1),
-    );
     $form['revision_information']['log'] = array(
+      '#required' => 'true',
       '#type' => 'textarea',
       '#title' => t('Revision log message'),
       '#rows' => 4,
