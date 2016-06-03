@@ -288,7 +288,6 @@ function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_
     ),
   );
   $form['revision_information']['log'] = array(
-    '#required' => 'true',
     '#type' => 'textarea',
     '#title' => t('Revision log message'),
     '#rows' => 4,
