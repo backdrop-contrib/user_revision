@@ -103,6 +103,8 @@ function user_revision_revert_confirm($form, $form_state, $user_revision) {
 function user_revision_revert_confirm_submit($form, &$form_state) {
   $user_revision = $form['#user_revision'];
   $user_revision->revision = 1;
+  // Removing password to not hash it again.
+  $user_revision->pass = '';
   $user_revision->log = t('Copy of the revision from %date.', array('%date' => format_date($user_revision->revision_timestamp)));
   user_save($user_revision, (array) $user_revision);
   watchdog('user', 'reverted %title revision %revision.', array('%title' => $user_revision->name, '%revision' => $user_revision->vid));

@@ -373,6 +373,11 @@ function user_revision_user_presave(&$edit, $account, $category) {
   $edit['timestamp'] = REQUEST_TIME;
   $edit['authorid'] = $user->uid;
 
+  // Loading the old hashed password again.
+  if (empty($edit['pass']) && !empty($edit['original']->pass)) {
+    $edit['pass'] = $edit['original']->pass;
+  }
+
   // Allow this module to be extended.
   $custom_fields = _user_revision_get_custom_fields($edit);
   foreach ($custom_fields as $field => $value) {
