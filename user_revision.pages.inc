@@ -45,8 +45,8 @@ function user_revision_overview($viewed_user) {
       $row[] = array(
         'data' => t('!date by !username', array(
           '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"),
-          '!username' => theme('username', array('account' => $revision)))
-        ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
+          '!username' => theme('username', array('account' => $revision)),
+        )) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : ''),
         'class' => array('revision-current'),
       );
       $operations[] = array(
@@ -57,9 +57,9 @@ function user_revision_overview($viewed_user) {
     }
     else {
       $row[] = t('!date by !username', array(
-        '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid"),
-        '!username' => theme('username', array('account' => $revision)))
-      ) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '');
+        '!date' => l(format_date($revision->timestamp, 'short'), "user/$viewed_user->uid/revisions/$revision->vid/view"),
+        '!username' => theme('username', array('account' => $revision)),
+      )) . (($revision->log != '') ? '<p class="revision-log">' . filter_xss($revision->log) . '</p>' : '');
 
       if ($revert_permission) {
         $operations[] = l(t('revert'), "user/$viewed_user->uid/revisions/$revision->vid/revert");
