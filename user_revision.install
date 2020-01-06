@@ -36,7 +36,6 @@ function user_revision_enable() {
       'picture',
       'data',
     ))
-    ->condition('u.vid', 0)
     ->condition('u.uid', 0, '!=')
     ->execute()
     ->fetchAll();
@@ -63,15 +62,13 @@ function user_revision_enable() {
 
   $user_revisions = db_select('user_revision', 'ur')
     ->fields('ur', array('uid', 'vid'))
+    ->condition('ur.uid', 0, '!=')
     ->execute()
     ->fetchAll();
-  // This foreach updates each user only once as for each user there
-  // can be only 1 record in the {users} table with vid = 0.
+  // Update revision id of all non-anonymous users.
   foreach ($user_revisions as $user_revision) {
     db_update('users')
       ->condition('uid', $user_revision->uid)
-      ->condition('uid', 0, '!=')
-      ->condition('vid', 0)
       ->fields(array('vid' => $user_revision->vid))
       ->execute();
   }
@@ -233,11 +230,12 @@ function user_revision_install() {
     ->expression('vid', 'uid')
     ->execute();
 
-  // Handle anon user first.
-  db_insert('user_revision')
+  // Handle anonymous user first.
+  // Auto-increment id can be either 0 (MYSQL), 1 (PostgreSQL) or who knows
+  // what else on different database engines.
+  $anonymous_vid = db_insert('user_revision')
     ->fields(array(
       'uid' => 0,
-      'vid' => 0,
       'log' => '',
       'timestamp' => 0,
       'authorid' => 0,
@@ -251,10 +249,10 @@ function user_revision_install() {
     ))
     ->execute();
 
-  // Make sure data is correct for anon user.
-  db_update('user_revision')
+  // Make sure data is correct for anonymous user.
+  db_update('users')
     ->condition('uid', 0)
-    ->fields(array('vid' => 0))
+    ->fields(array('vid' => $anonymous_vid))
     ->execute();
 
   // Update weight of module in system table.
