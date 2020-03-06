@@ -1,0 +1,305 @@
+<?php
+
+/**
+ * @file
+ * Provides functionality to show a diff between two user revisions.
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function user_rev_diff_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#diff':
+      $output = '<p>'. t('The user revisions diff module overwrites the normal revisions view. The revisions table is enhanced with a possibility to view the difference between two user revisions. Users with the %view_revisions permission will also be able to view the changes between any two selected revisions. You may disable this for individual content types on the content type configuration page. This module also provides a nifty %preview_changes button while editing a post.', array('%preview_changes' => t('View changes'), '%view_revisions' => t('view revisions'))) .'</p>';
+      return $output;
+    case 'user/%/revisions/account/view/%':
+      // the following string is copied from string copied from node_help('node/%/revisions')
+      return '<p>'. t('The revisions let you track differences between multiple versions of a user.') .'</p>';
+    case 'user/%/revisions/account/diff/%/%':
+      return '<p>'. t('Comparing two revisions:') .'</p>';
+  }
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function user_rev_diff_menu() {
+  $items = array();
+
+  $items['user/%user/revisions/account/diff'] = array(
+    'title' => 'Diff',
+    'page callback' => 'user_rev_diff_diffs_show',
+    'page arguments' => array(1, 5, 6),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => '_user_revision_access',
+    'access arguments' => array(1, array('view user revisions', 'view own user revisions')),
+    'file' => 'user_rev_diff.pages.inc',
+  );
+  $items['user/%user/revisions/account/latest'] = array(
+    'title' => 'Show latest difference',
+    'page callback' => 'user_rev_diff_latest',
+    'page arguments' => array(1),
+    'type' => MENU_CALLBACK,
+    'access callback' => '_user_revision_access',
+    'access arguments' => array(1, array('view user revisions', 'view own user revisions')),
+    'file' => 'user_rev_diff.pages.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_menu_alter().
+ */
+function user_rev_diff_menu_alter(&$callbacks) {
+  // Overwrite the default 'Revisions' page
+  $callbacks['user/%user/revisions']['page callback'] = 'user_rev_diff_diffs_overview';
+  $callbacks['user/%user/revisions']['module'] = 'user_rev_diff';
+  $callbacks['user/%user/revisions']['file'] = 'user_rev_diff.pages.inc';
+  return;
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function user_rev_diff_entity_info_alter(&$entity_info) {
+  $entity_info['user']['view modes'] += array(
+    'diff_standard' => array(
+      'label' => t('Revision comparison'),
+      'custom settings' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function user_rev_diff_admin_paths() {
+  if (variable_get('diff_admin_path_user', 0)) {
+    $paths = array(
+      'user/*/revisions/account/diff/*' => TRUE,
+    );
+    return $paths;
+  }
+}
+
+/**
+ * Access callback for the user revisions page.
+ * Determines whether a user has access to perform a certain operation on a revision.
+ * @param object $user The user object of the user in question.
+ * @param mixed $op Either a string or an array:
+ * String: A single word describing the action: 'view', 'edit', 'delete', 'revert'
+ * Array: Each element is a full permission string: 'view user revisions', 'edit user revisions', 'delete user revisions', 'revert user revisions'
+ */
+function user_rev_diff_user_revision_access($user, $op = 'view') {
+  if (is_array($op)) {
+    return _user_revision_access($user, $op);
+  }
+  else {
+    return _user_revision_access($user, $op . ' user revisions');
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function user_rev_diff_block_info() {
+  return array('inline' => array('info' => t('Inline User diff')));
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function user_rev_diff_block_view($delta) {
+  $block = array();
+  if ($delta === 'inline' && variable_get('show_user_rev_diff_inline', FALSE)
+      && ($vid_arg = user_revision_vid_arg())
+      && _user_revision_access($user = menu_get_object('user'), array(
+        'view user revisions',
+        'view own user revisions',
+      )
+    )) {
+    $vid = arg($vid_arg);
+    $user_rev = user_revision_load($user->uid, $vid);
+    $revisions = user_revision_list($user_rev);
+    if (count($revisions) > 1) {
+      unset($revisions[$vid]);
+      $old_vid = arg(++$vid_arg);
+      $block['subject'] = t('Highlight changes');
+      $block['content'] = drupal_get_form('user_rev_diff_inline_form', $user_rev, $old_vid, $revisions);
+    }
+  }
+  return $block;
+}
+
+/**
+ * Implementation of hook_user_view_alter().
+ */
+function user_rev_diff_user_view_alter(&$build) {
+  $account = $build['#account'];
+  if (variable_get('show_user_rev_diff_inline', FALSE)
+      && ($vid_arg = user_revision_vid_arg())
+      && _user_revision_access($account, array(
+        'view user revisions',
+        'view own user revisions',
+      )
+    )) {
+    module_load_include('inc', 'user_rev_diff', 'user_rev_diff.pages');
+    module_load_include('inc', 'diff', 'diff.pages');
+    $old_vid = arg(++$vid_arg);
+    $build = array('#markup' => user_rev_diff_inline_show($account, $old_vid));
+    $build['#prefix'] = isset($build['#prefix']) ? "<div id='diff-inline-{$account->uid}'>" . $build['#prefix'] : "<div id='diff-inline-{$account->uid}'>";
+    $build['#suffix'] = isset($build['#suffix']) ? $build['#suffix'] . "</div>" : "</div>";
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function user_rev_diff_form_user_profile_form_alter(&$form, $form_state, $form_id) {
+  if ($form['#user_category'] == 'account') {
+    // Add a 'View changes' button on the user edit form.
+    if (variable_get('show_preview_user_changes', TRUE)
+        && user_access('diff view changes')
+        && $form['#user']->uid > 0) {
+      $form['actions']['preview_changes'] = array(
+        '#type' => 'submit',
+        '#value' => t('View changes'),
+        '#weight' => 0,
+        '#submit' => array('user_rev_diff_user_form_build_preview_changes')
+      );
+    }
+    // If content for changes has been added to the form_state,
+    // display using the form #prefix.
+    if (isset($form_state['user_preview'])) {
+      $form['#prefix'] = $form_state['user_preview'];
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter() for node_type_form.
+ */
+function user_rev_diff_form_user_revision_admin_settings_alter(&$form, $form_state) {
+  // User revision settings form.
+  // Add checkbox to activate 'View changes' button per node type.
+  $form['user_rev_diff'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Revision differences'),
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+  );
+  $form['user_rev_diff']['show_preview_user_changes'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show %preview_changes button on user edit form', array('%preview_changes' => t('View changes'))),
+    '#weight' => 10,
+    '#default_value' => variable_get('show_preview_user_changes', TRUE),
+  );
+  $form['user_rev_diff']['show_user_rev_diff_inline'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show diffs inline for users'),
+    '#description' => t("You must enable the 'Inline User diff' block to use this feature"),
+    '#weight' => 10,
+    '#default_value' => variable_get('show_user_rev_diff_inline', FALSE),
+  );
+}
+
+/**
+ * Callback if 'View changes' is pressed.
+ */
+function user_rev_diff_user_form_build_preview_changes($form, &$form_state) {
+  module_load_include('inc', 'user_rev_diff', 'user_rev_diff.pages');
+
+  $user_old = $form_state['user'];
+  // zap the old password, as the unedited field is blank.
+  $user_old->pass = '';
+  $user_new = clone $user_old;
+  // build a user object representing the edited values.
+  entity_form_submit_build_entity('user', $user_new, $form, $form_state);
+
+  // Create diff of old node and edited node
+  $state = variable_get('diff_default_state_user', 'raw');
+  $rows = _user_rev_diff_body_rows($user_old, $user_new, $state);
+
+  // Build the table with the list of changes.
+  $cols = _diff_default_cols();
+  $header = _diff_default_header(t('Original'), t('Changes'));
+  $changes = theme('table__diff__preview', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('class' => array('diff')),
+    'colgroups' => $cols,
+    'sticky' => FALSE,
+  ));
+
+  // Attach diff to form state, is added to form in hook_form_alter().
+  $form_state['user_preview'] = $changes;
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function user_rev_diff_theme() {
+  return array(
+    'user_rev_diff_inline_metadata' => array(
+      'arguments' => array('user' => NULL),
+      'file' => 'user_rev_diff.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Form builder: Inline diff controls.
+ */
+function user_rev_diff_inline_form($form, $form_state, $user, $old_vid, $revisions) {
+  $form = array();
+  $form['user'] = array(
+    '#type' => 'value',
+    '#value' => $user
+  );
+  $form['revision'] = array(
+    '#type' => 'select',
+    '#options' => array(0 => '< '. t('No highlighting') . ' >'),
+    '#default_value' => (arg(2) === 'revisions' && arg(5) === $user->vid) ? $old_vid : 0,
+    '#ajax' => array(
+      'callback' => 'user_rev_diff_inline_ajax',
+      'wrapper' => "diff-inline-{$user->uid}",
+      'method' => 'replace',
+    ),
+  );
+  foreach ($revisions as $revision) {
+    $form['revision']['#options'][$revision->vid] = t('@revision by @name', array(
+      '@revision' => format_date($revision->timestamp, 'short'),
+      '@name' => $revision->name,
+    ));
+  }
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('View'),
+    '#submit' => array('user_rev_diff_inline_form_submit'),
+    '#attributes' => array('class' => array('diff-js-hidden')),
+  );
+  return $form;
+}
+
+/**
+ * AJAX callback for rendering the inline diff of a user.
+ */
+function user_rev_diff_inline_ajax($form, $form_state) {
+  module_load_include('inc', 'user_rev_diff', 'user_rev_diff.pages');
+  $user = $form['user']['#value'];
+  $old_vid = isset($form_state['values']['revision']) ? $form_state['values']['revision'] : 0;
+  return "<div id='diff-inline-{$user->uid}'>" . user_rev_diff_inline_show($user, $old_vid) . "</div>";
+}
+
+/**
+ * Form submission handler for diff_inline_form() for JS-disabled clients.
+ */
+function user_rev_diff_inline_form_submit(&$form, &$form_state) {
+  if (isset($form_state['values']['revision'], $form_state['values']['user'])) {
+    $user = $form_state['values']['user'];
+    $old_vid = $form_state['values']['revision'];
+    $form_state['redirect'] = _user_revision_base_path($user) . "/view/{$user->vid}/$old_vid";
+  }
+}

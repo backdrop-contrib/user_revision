@@ -1,0 +1,10 @@
+name = User Revisions Diff
+description = Show differences between user revisions.
+package = User
+core = 7.x
+
+dependencies[] = diff
+dependencies[] = user_revision
+
+
+
