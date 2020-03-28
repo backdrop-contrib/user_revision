@@ -49,7 +49,7 @@ function user_revision_menu() {
   );
   $items['user/%user_revision/revisions/account/%/revert'] = array(
     'title' => 'Revert to earlier revision',
-    'load arguments' => array(3),
+    'load arguments' => array(4),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_revert_confirm', 1),
     'access callback' => '_user_revision_access',
@@ -63,7 +63,7 @@ function user_revision_menu() {
   );
   $items['user/%user_revision/revisions/account/%/delete'] = array(
     'title' => 'Delete earlier revision',
-    'load arguments' => array(3),
+    'load arguments' => array(4),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('user_revision_delete_confirm', 1),
     'access callback' => '_user_revision_access',
@@ -536,22 +536,24 @@ function user_revision_user_delete($account) {
 /**
  * Save record to the database.
  */
-function _user_save_revision(&$edit, $update = NULL) {
+function _user_save_revision(&$edit, $update = array()) {
   $picture = NULL;
   if (isset($edit['picture']) && is_object($edit['picture'])) {
     $picture = $edit['picture'];
     $edit['picture'] = $picture->fid;
   }
-  // Add timestamp and author.
-  if (isset($update)) {
-    drupal_write_record('user_revision', $edit, $update);
-  }
-  else {
-    drupal_write_record('user_revision', $edit);
-  }
+  // If $update is empty a new revision is created, otherwise the current vid is updated.
+  drupal_write_record('user_revision', $edit, $update);
 
   // Insert each role to user_revision_roles table.
   if (!empty($edit['roles'])) {
+    // If updating, delete any existing roles for this revision, as we're going to re-add them all.
+    if (!empty($update)) {
+      db_delete('user_revision_roles')
+        ->condition('uid', $edit['uid'])
+        ->condition('vid', $edit['vid'])
+        ->execute();
+    }
     foreach (array_keys($edit['roles']) as $rid) {
       // Only store real rids, "Authenticated User" is built-in.
       if ($rid != DRUPAL_AUTHENTICATED_RID) {
@@ -564,7 +566,6 @@ function _user_save_revision(&$edit, $update = NULL) {
     file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
     $edit['picture'] = $picture;
   }
-  // Pass new vid to user_save?
 }
 
 /**
