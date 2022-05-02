@@ -210,7 +210,7 @@ class UserRevisionController extends UserController {
   function attachLoad(&$queried_users, $revision_id = FALSE) {
     parent::attachLoad($queried_users, $revision_id);
     foreach ($queried_users as $key => $record) {
-      $queried_users[$key]->revision = 1;
+      $queried_users[$key]->revision = variable_get('user_revision_by_default', 1);
     }
   }
 
