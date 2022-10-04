@@ -60,18 +60,6 @@ function user_rev_diff_menu_alter(&$callbacks) {
 }
 
 /**
- * Implements hook_entity_info_alter().
- */
-function user_rev_diff_entity_info_alter(&$entity_info) {
-  $entity_info['user']['view modes'] += array(
-    'diff_standard' => array(
-      'label' => t('Revision comparison'),
-      'custom settings' => FALSE,
-    ),
-  );
-}
-
-/**
  * Implements hook_admin_paths().
  */
 function user_rev_diff_admin_paths() {
@@ -256,7 +244,7 @@ function user_rev_diff_inline_form($form, $form_state, $user, $old_vid, $revisio
   $form = array();
   $form['user'] = array(
     '#type' => 'value',
-    '#value' => $user
+    '#value' => $user,
   );
   $form['revision'] = array(
     '#type' => 'select',
@@ -274,6 +262,7 @@ function user_rev_diff_inline_form($form, $form_state, $user, $old_vid, $revisio
       '@name' => $revision->name,
     ));
   }
+  drupal_add_css(drupal_get_path('module', 'diff') .'/diff.css');
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('View'),

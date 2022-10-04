@@ -227,14 +227,13 @@ function _user_rev_diff_body_rows($old_user, $new_user) {
  * If metadata is TRUE a header will be added with a legend explaining the color code.
  * This function returns HTML code.
  */
-function user_rev_diff_inline_show($user, $old_vid = 0, $metadata = TRUE) {
-  $new_user = /*clone*/ $user;
-  user_build_content($new_user);
+function user_rev_diff_inline_show($new_user, $old_vid = 0, $metadata = TRUE) {
+  user_build_content($new_user, 'revision');
   $new = drupal_render($new_user->content);
   module_load_include('inc', 'diff', 'diff.pages');
   if ($old_vid) {
-    $old_user = user_revision_load($user->uid, $old_vid, TRUE);
-    user_build_content($old_user);
+    $old_user = user_revision_load($new_user->uid, $old_vid, TRUE);
+    user_build_content($old_user, 'revision');
     $old = drupal_render($old_user->content);
     $output = $metadata ? theme('user_rev_diff_inline_metadata', array('user' => $new_user)) : '';
     $output .= diff_get_inline($old, $new);
