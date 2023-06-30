@@ -230,6 +230,37 @@ function user_revision_install() {
 
   // Execute Batch API.
   batch_set($batch);
+
+  // Add uid-0 record.
+  _user_revision_add_uid_0();
+}
+
+/**
+ * Add revision record for uid 0 (anonymous user).
+ *
+ * Have to do this separately to avoid problems with
+ * vid serial column auto-generating values.
+ */
+function _user_revision_add_uid_0() {
+  $urzero = db_select('user_revision', 'ur')
+  ->fields('ur', array('uid'))
+  ->condition('ur.uid', 0)
+  ->execute()
+  ->fetchAll();
+
+  if (empty($urzero)) {
+    db_insert('user_revision')
+    ->fields(array(
+      'uid' => 0,
+      'log' => '',
+    ))
+    ->execute();
+    // vid is auto-increment so change it to 0.
+    db_update('user_revision')
+    ->fields(array('vid' => 0))
+    ->condition('uid', 0)
+    ->execute();
+  }
 }
 
 /**
@@ -287,4 +318,11 @@ function user_revision_update_7002() {
       }
     }
   }
+}
+
+/**
+ * Add revision record for uid 0 (anonymous user).
+ */
+function user_revision_update_7003() {
+  _user_revision_add_uid_0();
 }
