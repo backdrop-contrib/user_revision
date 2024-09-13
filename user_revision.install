@@ -57,13 +57,6 @@ function user_revision_schema() {
         'default' => '',
         'description' => "User's e-mail address.",
       ),
-      'theme' => array(
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => "User's default theme.",
-      ),
       'signature' => array(
         'type' => 'varchar',
         'length' => 255,
