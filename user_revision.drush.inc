@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implements hook_sql_drush_sql_sync_sanitize.
+ * Implements hook_sql_drush_sql_sync_sanitize.().
  *
  * Sanitize email addresses in the user_revision table when the user_revision
  * module is enabled. Without this entity_load() will load user objects with
@@ -29,15 +29,27 @@ function user_revision_drush_sql_sync_sanitize($site) {
 
       $db_driver = $databases['default']['default']['driver'];
       if ($db_driver == 'pgsql') {
-        $email_map = array('%uid' => "' || u.uid || '", '%mail' => "' || replace(mail, '@', '_') || '", '%name' => "' || replace(name, ' ', '_') || '");
+        $email_map = array(
+          '%uid' => "' || u.uid || '",
+          '%mail' => "' || replace(mail, '@', '_') || '",
+          '%name' => "' || replace(name, ' ', '_') || '",
+        );
         $newmail =  "'" . str_replace(array_keys($email_map), array_values($email_map), $newemail) . "'";
       }
       elseif ($db_driver == 'mssql') {
-        $email_map = array('%uid' => "' + u.uid + '", '%mail' => "' + replace(mail, '@', '_') + '", '%name' => "' + replace(name, ' ', '_') + '");
+        $email_map = array(
+          '%uid' => "' + u.uid + '",
+          '%mail' => "' + replace(mail, '@', '_') + '",
+          '%name' => "' + replace(name, ' ', '_') + '",
+        );
         $newmail =  "'" . str_replace(array_keys($email_map), array_values($email_map), $newemail) . "'";
       }
       else {
-        $email_map = array('%uid' => "', u.uid, '", '%mail' => "', replace(mail, '@', '_'), '", '%name' => "', replace(name, ' ', '_'), '");
+        $email_map = array(
+          '%uid' => "', u.uid, '",
+          '%mail' => "', replace(mail, '@', '_'), '",
+          '%name' => "', replace(name, ' ', '_'), '",
+        );
         $newmail =  "concat('" . str_replace(array_keys($email_map), array_values($email_map), $newemail) . "')";
       }
       $user_revision_table_updates[] = "mail = $newmail";

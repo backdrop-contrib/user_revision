@@ -35,7 +35,7 @@ class views_handler_field_user_revision_link_delete extends views_handler_field_
     $text = !empty($this->options['text']) ? $this->options['text'] : t('delete');
     $this->options['alter']['make_link'] = TRUE;
     $this->options['alter']['path'] = "user/" . $values->{$this->aliases['uid']} . "/revisions/" . $values->{$this->aliases['vid']} . "/delete";
-    $this->options['alter']['query'] = drupal_get_destination();
+    $this->options['alter']['query'] = backdrop_get_destination();
 
     return $text;
   }

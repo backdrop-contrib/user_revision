@@ -13,6 +13,10 @@ $plugin = array(
   'category' => t('Form'),
 );
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_revision_user_revision_content_type_render($subtype, $conf, $panel_args, &$context) {
   $block = new stdClass();
   $block->module = t('user_revision');
@@ -31,10 +35,18 @@ function user_revision_user_revision_content_type_render($subtype, $conf, $panel
   return $block;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_revision_user_revision_content_type_admin_title($subtype, $conf, $context) {
   return t('"@s" user revision', array('@s' => $context->identifier));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function user_revision_user_revision_content_type_edit_form($form, &$form_state) {
   // provide a blank form so we have a place to have context setting.
   return $form;

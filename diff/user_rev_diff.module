@@ -6,23 +6,23 @@
  */
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().().
  */
 function user_rev_diff_help($path, $arg) {
   switch ($path) {
     case 'admin/help#diff':
-      $output = '<p>'. t('The user revisions diff module overwrites the normal revisions view. The revisions table is enhanced with a possibility to view the difference between two user revisions. Users with the %view_revisions permission will also be able to view the changes between any two selected revisions. You may disable this for individual content types on the content type configuration page. This module also provides a nifty %preview_changes button while editing a post.', array('%preview_changes' => t('View changes'), '%view_revisions' => t('view revisions'))) .'</p>';
+      $output = '<p>' . t('The user revisions diff module overwrites the normal revisions view. The revisions table is enhanced with a possibility to view the difference between two user revisions. Users with the %view_revisions permission will also be able to view the changes between any two selected revisions. You may disable this for individual content types on the content type configuration page. This module also provides a nifty %preview_changes button while editing a post.', array('%preview_changes' => t('View changes'), '%view_revisions' => t('view revisions'))) . '</p>';
       return $output;
     case 'user/%/revisions/account/view/%':
       // the following string is copied from string copied from node_help('node/%/revisions')
-      return '<p>'. t('The revisions let you track differences between multiple versions of a user.') .'</p>';
+      return '<p>' . t('The revisions let you track differences between multiple versions of a user.') . '</p>';
     case 'user/%/revisions/account/diff/%/%':
-      return '<p>'. t('Comparing two revisions:') .'</p>';
+      return '<p>' . t('Comparing two revisions:') . '</p>';
   }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().().
  */
 function user_rev_diff_menu() {
   $items = array();
@@ -49,7 +49,7 @@ function user_rev_diff_menu() {
 }
 
 /**
- * Implementation of hook_menu_alter().
+ * Implements hook_menu_alter().().
  */
 function user_rev_diff_menu_alter(&$callbacks) {
   // Overwrite the default 'Revisions' page
@@ -60,9 +60,10 @@ function user_rev_diff_menu_alter(&$callbacks) {
 }
 
 /**
- * Implements hook_admin_paths().
+ * Implements hook_admin_paths().().
  */
 function user_rev_diff_admin_paths() {
+  // TODO This variable was probably removed in Backdrop without replacement.
   if (variable_get('diff_admin_path_user', 0)) {
     $paths = array(
       'user/*/revisions/account/diff/*' => TRUE,
@@ -89,23 +90,34 @@ function user_rev_diff_user_revision_access($user, $op = 'view') {
 }
 
 /**
- * Implements hook_block_info().
+ * Implements hook_block_info().().
  */
 function user_rev_diff_block_info() {
   return array('inline' => array('info' => t('Inline User diff')));
 }
 
 /**
- * Implements hook_block_view().
+ * Implements hook_config_info().
+ */
+function user_rev_diff_config_info() {
+  $prefixes['user_rev_diff.settings'] = array(
+    'label' => t('User revision settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
+ * Implements hook_block_view().().
  */
 function user_rev_diff_block_view($delta) {
   $block = array();
-  if ($delta === 'inline' && variable_get('show_user_rev_diff_inline', FALSE)
-      && ($vid_arg = user_revision_vid_arg())
-      && _user_revision_access($user = menu_get_object('user'), array(
-        'view user revisions',
-        'view own user revisions',
-      )
+  if ($delta === 'inline' && config_get('user_rev_diff.settings', 'show_user_rev_diff_inline')
+       && ($vid_arg = user_revision_vid_arg())
+       && _user_revision_access($user = menu_get_object('user'), array(
+    'view user revisions',
+    'view own user revisions',
+  )
     )) {
     $vid = arg($vid_arg);
     $user_rev = user_revision_load($user->uid, $vid);
@@ -114,23 +126,23 @@ function user_rev_diff_block_view($delta) {
       unset($revisions[$vid]);
       $old_vid = arg(++$vid_arg);
       $block['subject'] = t('Highlight changes');
-      $block['content'] = drupal_get_form('user_rev_diff_inline_form', $user_rev, $old_vid, $revisions);
+      $block['content'] = backdrop_get_form('user_rev_diff_inline_form', $user_rev, $old_vid, $revisions);
     }
   }
   return $block;
 }
 
 /**
- * Implementation of hook_user_view_alter().
+ * Implements hook_user_view_alter().().
  */
 function user_rev_diff_user_view_alter(&$build) {
   $account = $build['#account'];
-  if (variable_get('show_user_rev_diff_inline', FALSE)
-      && ($vid_arg = user_revision_vid_arg())
-      && _user_revision_access($account, array(
-        'view user revisions',
-        'view own user revisions',
-      )
+  if (config_get('user_rev_diff.settings', 'show_user_rev_diff_inline')
+       && ($vid_arg = user_revision_vid_arg())
+       && _user_revision_access($account, array(
+    'view user revisions',
+    'view own user revisions',
+  )
     )) {
     module_load_include('inc', 'user_rev_diff', 'user_rev_diff.pages');
     module_load_include('inc', 'diff', 'diff.pages');
@@ -142,19 +154,20 @@ function user_rev_diff_user_view_alter(&$build) {
 }
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_alter().().
  */
 function user_rev_diff_form_user_profile_form_alter(&$form, $form_state, $form_id) {
   if ($form['#user_category'] == 'account') {
     // Add a 'View changes' button on the user edit form.
+    // TODO This variable was probably removed in Backdrop without replacement.
     if (variable_get('show_preview_user_changes', TRUE)
-        && user_access('diff view changes')
-        && $form['#user']->uid > 0) {
+         && user_access('diff view changes')
+         && $form['#user']->uid > 0) {
       $form['actions']['preview_changes'] = array(
         '#type' => 'submit',
         '#value' => t('View changes'),
         '#weight' => 0,
-        '#submit' => array('user_rev_diff_user_form_build_preview_changes')
+        '#submit' => array('user_rev_diff_user_form_build_preview_changes'),
       );
     }
     // If content for changes has been added to the form_state,
@@ -166,17 +179,18 @@ function user_rev_diff_form_user_profile_form_alter(&$form, $form_state, $form_i
 }
 
 /**
- * Implements hook_form_alter() for node_type_form.
+ * Implements hook_form_alter() for node_type_form.().
  */
 function user_rev_diff_form_user_revision_admin_settings_alter(&$form, $form_state) {
   // User revision settings form.
   // Add checkbox to activate 'View changes' button per node type.
   $form['user_rev_diff'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Revision differences'),
-      '#collapsible' => FALSE,
-      '#collapsed' => FALSE,
+    '#type' => 'fieldset',
+    '#title' => t('Revision differences'),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
   );
+  // TODO This variable was probably removed in Backdrop without replacement.
   $form['user_rev_diff']['show_preview_user_changes'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show %preview_changes button on user edit form', array('%preview_changes' => t('View changes'))),
@@ -188,7 +202,7 @@ function user_rev_diff_form_user_revision_admin_settings_alter(&$form, $form_sta
     '#title' => t('Show diffs inline for users'),
     '#description' => t("You must enable the 'Inline User diff' block to use this feature"),
     '#weight' => 10,
-    '#default_value' => variable_get('show_user_rev_diff_inline', FALSE),
+    '#default_value' => config_get('user_rev_diff.settings', 'show_user_rev_diff_inline'),
   );
 }
 
@@ -206,6 +220,7 @@ function user_rev_diff_user_form_build_preview_changes($form, &$form_state) {
   entity_form_submit_build_entity('user', $user_new, $form, $form_state);
 
   // Create diff of old node and edited node
+  // TODO This variable was probably removed in Backdrop without replacement.
   $state = variable_get('diff_default_state_user', 'raw');
   $rows = _user_rev_diff_body_rows($user_old, $user_new, $state);
 
@@ -226,7 +241,7 @@ function user_rev_diff_user_form_build_preview_changes($form, &$form_state) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().().
  */
 function user_rev_diff_theme() {
   return array(
@@ -248,7 +263,7 @@ function user_rev_diff_inline_form($form, $form_state, $user, $old_vid, $revisio
   );
   $form['revision'] = array(
     '#type' => 'select',
-    '#options' => array(0 => '< '. t('No highlighting') . ' >'),
+    '#options' => array(0 => '< ' . t('No highlighting') . ' >'),
     '#default_value' => (arg(2) === 'revisions' && arg(5) === $user->vid) ? $old_vid : 0,
     '#ajax' => array(
       'callback' => 'user_rev_diff_inline_ajax',
@@ -262,7 +277,7 @@ function user_rev_diff_inline_form($form, $form_state, $user, $old_vid, $revisio
       '@name' => $revision->name,
     ));
   }
-  drupal_add_css(drupal_get_path('module', 'diff') .'/diff.css');
+  backdrop_add_css(backdrop_get_path('module', 'diff') . '/diff.css');
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('View'),

@@ -1,0 +1,25 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the user_rev_diff module.
+ *
+ */
+
+
+/**
+ * Migrate user_rev_diff variables to config.
+ */
+function user_rev_diff_update_1000() {
+  $config = config('user_rev_diff.settings');
+  $config->set('show_user_rev_diff_inline', update_variable_get('show_user_rev_diff_inline', array()));
+  $config->save();
+
+  update_variable_del('show_user_rev_diff_inline');
+}
+
+/**
+ * Implements hook_install().
+ */
+function user_rev_diff_install() {
+  // Dynamically generated variable data was detected.
+}

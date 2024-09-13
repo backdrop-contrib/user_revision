@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_schema().
+ * Implements hook_schema().().
  */
 function user_revision_schema() {
   $schema['user_revision'] = array(
@@ -108,7 +108,7 @@ function user_revision_schema() {
         'not null' => FALSE,
         'size' => 'big',
         'serialize' => TRUE,
-        'description' => 'A serialized array of name value pairs that are related to the user. Any form values posted during user edit are stored and are loaded into the $user object during user_load(). Use of this field is discouraged and it will likely disappear in a future version of Drupal.',
+        'description' => 'A serialized array of name value pairs that are related to the user. Any form values posted during user edit are stored and are loaded into the $user object during user_load(). Use of this field is discouraged and it will likely disappear in a future version of Backdrop.',
       ),
       'ip' => array(
         'type' => 'varchar',
@@ -184,7 +184,7 @@ function user_revision_schema() {
 }
 
 /**
- * Implements hook_install().
+ * Implements hook_install().().
  */
 function user_revision_install() {
   $schema['users'] = array();
@@ -225,7 +225,7 @@ function user_revision_install() {
     'init_message' => t('Initializing.'),
     'progress_message' => t('Completed @current of @total.'),
     'error_message' => t('An error has occurred.'),
-    'file' => drupal_get_path('module', 'user_revision') . '/user_revision.batch.inc',
+    'file' => backdrop_get_path('module', 'user_revision') . '/user_revision.batch.inc',
   );
 
   // Execute Batch API.
@@ -233,6 +233,7 @@ function user_revision_install() {
 
   // Add uid-0 record.
   _user_revision_add_uid_0();
+  // Dynamically generated variable data was detected on the following lines.
 }
 
 /**
@@ -264,7 +265,7 @@ function _user_revision_add_uid_0() {
 }
 
 /**
- * Implements hook_uninstall().
+ * Implements hook_uninstall().().
  */
 function user_revision_uninstall() {
   module_load_include('module', 'user_revision');
@@ -278,51 +279,31 @@ function user_revision_uninstall() {
   }
 }
 
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_revision_update_7001() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_revision_update_7002() { }
+
+// TODO The old hook_update_N functions cannot be applied to Backdrop.
+function user_revision_update_7003() { }
+
 /**
- * Change the weight of User Revision Module so all hooks are executed last.
- *
- * This way all changes made in hook_user_presave etc. won't be lost.
+ * Implements hook_update_last_removed().
  */
-function user_revision_update_7001() {
-  db_update('system')->fields(array('weight' => 99))->condition('name', 'user_revision', '=')->execute();
+function user_revision_update_last_removed() {
+  return 7003;
 }
 
 /**
- * Create revisions with user roles.
+ * Migrate user_revision variables to config.
  */
-function user_revision_update_7002() {
-  // Create the new revision role table.
-  if (!db_table_exists('user_revision_roles')) {
-    $user_role_revision_schema = drupal_get_schema_unprocessed('user_revision', 'user_revision_roles');
-    db_create_table('user_revision_roles', $user_role_revision_schema);
-  }
-  // Fetch all user revision records.
-  $data = db_select('user_revision', 'ur')
-    ->fields('ur', array('uid', 'vid'))
-    ->orderBy('ur.uid')
-    ->execute()
-    ->fetchAll();
+function user_revision_update_1000() {
+  $config = config('user_revision.settings');
+  $config->set('user_revision_by_default', update_variable_get('user_revision_by_default', '1'));
+  $config->set('user_revision_admin_theme', update_variable_get('user_revision_admin_theme', '0'));
+  $config->save();
 
-  foreach ($data as $row) {
-    // Search each role for the user.
-    $roles = db_select('users_roles', 'ur')
-      ->fields('ur', array('rid'))
-      ->condition('uid', $row->uid)
-      ->execute()
-      ->fetchAll();
-
-    if (!empty($roles)) {
-      foreach ($roles as $role) {
-        // Add roles to user_revision_roles table.
-        user_revision_add_role($row->uid, $row->vid, $role->rid);
-      }
-    }
-  }
-}
-
-/**
- * Add revision record for uid 0 (anonymous user).
- */
-function user_revision_update_7003() {
-  _user_revision_add_uid_0();
+  update_variable_del('user_revision_by_default');
+  update_variable_del('user_revision_admin_theme');
 }

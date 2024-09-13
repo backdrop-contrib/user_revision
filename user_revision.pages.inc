@@ -10,9 +10,12 @@
  */
 function user_revision_overview($viewed_user) {
   global $user;
-  drupal_set_title(t('Revisions for %title', array('%title' => $viewed_user->name)), PASS_THROUGH);
+  backdrop_set_title(t('Revisions for %title', array('%title' => $viewed_user->name)), PASS_THROUGH);
 
-  $header = array(t('Revision'), array('data' => t('Operations'), 'colspan' => 2),);
+  $header = array(t('Revision'), array(
+      'data' => t('Operations'),
+      'colspan' => 2,
+    ));
   $data = user_revision_list_build($viewed_user);
 
   $rows = array();
@@ -47,7 +50,7 @@ function user_revision_revert_confirm_submit($form, &$form_state) {
   $user_revision->log = t('Copy of the revision from %date.', array('%date' => format_date($user_revision->revision_timestamp)));
   user_save($user_revision, (array) $user_revision);
   watchdog('user', 'reverted %title revision %revision.', array('%title' => $user_revision->name, '%revision' => $user_revision->vid));
-  drupal_set_message(t('%title has been reverted back to the revision from %revision-date.', array('%title' => $user_revision->name, '%revision-date' => format_date($user_revision->revision_timestamp))));
+  backdrop_set_message(t('%title has been reverted back to the revision from %revision-date.', array('%title' => $user_revision->name, '%revision-date' => format_date($user_revision->revision_timestamp))));
   $form_state['redirect'] = _user_revision_base_path($user_revision);
 }
 
@@ -67,7 +70,7 @@ function user_revision_delete_confirm_submit($form, &$form_state) {
   user_revision_delete($user_revision);
 
   watchdog('user', 'deleted %title revision %revision.', array('%title' => $user_revision->name, '%revision' => $user_revision->vid));
-  drupal_set_message(t('Revision from %revision-date %title has been deleted.', array('%revision-date' => format_date($user_revision->revision_timestamp), '%title' => $user_revision->name)));
+  backdrop_set_message(t('Revision from %revision-date %title has been deleted.', array('%revision-date' => format_date($user_revision->revision_timestamp), '%title' => $user_revision->name)));
   if (db_select('user_revision', 'ur')->condition('ur.uid', $user_revision->uid)->countQuery()->execute()->fetchField() > 1) {
     $form_state['redirect'] .= _user_revision_base_path($user_revision);
   }

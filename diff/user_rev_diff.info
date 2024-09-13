@@ -1,7 +1,8 @@
 name = User Revisions Diff
 description = Show differences between user revisions.
 package = User
-core = 7.x
+backdrop = 1.x
+type = module
 
 dependencies[] = diff
 dependencies[] = user_revision

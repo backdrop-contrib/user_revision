@@ -12,7 +12,7 @@ function user_rev_diff_latest($user) {
   $revisions = user_revision_list($user);
   $new = array_shift($revisions);
   $old = array_shift($revisions);
-  drupal_goto(_user_revision_base_path($user) . "/diff/{$old->vid}/{$new->vid}");
+  backdrop_goto(_user_revision_base_path($user) . "/diff/{$old->vid}/{$new->vid}");
 }
 
 /**
@@ -20,8 +20,8 @@ function user_rev_diff_latest($user) {
  * an input form to select two revisions for a comparison.
  */
 function user_rev_diff_diffs_overview($user) {
-  drupal_set_title(t('Revisions for @title', array('@title' => $user->name)));
-  return drupal_get_form('user_rev_diff_user_revisions', $user);
+  backdrop_set_title(t('Revisions for @title', array('@title' => $user->name)));
+  return backdrop_get_form('user_rev_diff_user_revisions', $user);
 }
 
 /**
@@ -60,18 +60,21 @@ function user_rev_diff_user_revisions($form, $form_state, $viewed_user) {
   $form['diff']['old'] = array(
     '#type' => 'radios',
     '#options' => $revision_ids,
-    '#default_value' => $old_vid
+    '#default_value' => $old_vid,
   );
   $form['diff']['new'] = array(
     '#type' => 'radios',
     '#options' => $revision_ids,
-    '#default_value' => $new_vid
+    '#default_value' => $new_vid,
   );
   $form['uid'] = array(
     '#type' => 'hidden',
     '#value' => $viewed_user->uid,
   );
-  $form['submit'] = array('#type' => 'submit', '#value' => t('Compare'));
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Compare'),
+  );
 
   // use the diff module's theme function.
   $form['#attached'] = diff_build_attachments(TRUE);
@@ -97,7 +100,7 @@ function user_rev_diff_user_revisions_submit($form, &$form_state) {
 function user_rev_diff_user_revisions_validate($form, &$form_state) {
   $old_vid = $form_state['values']['old'];
   $new_vid = $form_state['values']['new'];
-  if ($old_vid==$new_vid || !$old_vid || !$new_vid) {
+  if ($old_vid == $new_vid || !$old_vid || !$new_vid) {
     form_set_error('diff', t('Select different revisions to compare.'));
   }
 }
@@ -116,7 +119,7 @@ function user_rev_diff_user_revisions_validate($form, &$form_state) {
 function user_rev_diff_diffs_show($user, $old_vid, $new_vid) {
   module_load_include('inc', 'diff', 'diff.pages');
   // Set same title as on the 'Revisions' tab for consistency
-  drupal_set_title(t('Revisions for @name', array('@name' => $user->name)));
+  backdrop_set_title(t('Revisions for @name', array('@name' => $user->name)));
 
   $user_revisions = user_revision_list($user);
   $old_user = user_revision_load($user->uid, $old_vid);
@@ -124,18 +127,18 @@ function user_rev_diff_diffs_show($user, $old_vid, $new_vid) {
   $link_base = _user_revision_base_path($user);
   // Generate table header (date, username, logmessage).
   $old_header = t('!date by !username', array(
-    '!date' => l(format_date($old_user->revision_timestamp),
+    '!date' => l(format_date($old_user->revision_timestamp), 
     "$link_base/view/{$old_user->vid}"),
     '!username' => theme('username', array('account' => $user_revisions[$old_vid])),
   ));
   $new_header = t('!date by !username', array(
-    '!date' => l(format_date($new_user->revision_timestamp),
+    '!date' => l(format_date($new_user->revision_timestamp), 
     "$link_base/view/{$new_user->vid}"),
     '!username' => theme('username', array('account' => $user_revisions[$new_vid])),
   ));
 
-  $old_log = $old_user->log != '' ? '<p class="revision-log">'. filter_xss($old_user->log) .'</p>' : '';
-  $new_log = $new_user->log != '' ? '<p class="revision-log">'. filter_xss($new_user->log) .'</p>' : '';
+  $old_log = $old_user->log != '' ? '<p class="revision-log">' . filter_xss($old_user->log) . '</p>' : '';
+  $new_log = $new_user->log != '' ? '<p class="revision-log">' . filter_xss($new_user->log) . '</p>' : '';
 
   // Generate previous diff/next diff links.
   $next_vid = _diff_get_next_vid($user_revisions, $new_vid);
@@ -160,42 +163,42 @@ function user_rev_diff_diffs_show($user, $old_vid, $new_vid) {
     $rows[] = array(
       array(
         'data' => $old_log,
-        'colspan' => 2
+        'colspan' => 2,
       ),
       array(
         'data' => $new_log,
-        'colspan' => 2
-      )
+        'colspan' => 2,
+      ),
     );
   }
   $rows[] = array(
     array(
       'data' => $prev_link,
       'class' => array('diff-prevlink'),
-      'colspan' => 2
+      'colspan' => 2,
     ),
     array(
       'data' => $next_link,
       'class' => array('diff-nextlink'),
-      'colspan' => 2
-    )
+      'colspan' => 2,
+    ),
   );
   $rows = array_merge($rows, _user_rev_diff_body_rows($old_user, $new_user));
   $output = theme('table', array(
     'header' => $header,
     'rows' => $rows,
     'attributes' => array('class' => array('diff')),
-    'cols' => $cols
+    'cols' => $cols,
   ));
   $user_view = user_view($new_user, 'diff_standard');
-  $user_output = drupal_render($user_view);
+  $user_output = backdrop_render($user_view);
   // Omit header for account display if no rendered output.
   if (!empty(trim(strip_tags($user_output)))) {
     if ($user->vid == $new_vid) {
-      $output .= '<div class="diff-section-title">'. t('Current revision:') .'</div>';
+      $output .= '<div class="diff-section-title">' . t('Current revision:') . '</div>';
     }
     else {
-      $output .= '<div class="diff-section-title">'. t('Revision of !new_date:', array('!new_date' => format_date($new_user->revision_timestamp))) .'</div>';
+      $output .= '<div class="diff-section-title">' . t('Revision of !new_date:', array('!new_date' => format_date($new_user->revision_timestamp))) . '</div>';
     }
     $output .= $user_output;
   }
@@ -214,6 +217,7 @@ function user_rev_diff_diffs_show($user, $old_vid, $new_vid) {
 function _user_rev_diff_body_rows($old_user, $new_user) {
   // make use of the user comparison functions in the diff module.
   module_load_include('inc', 'diff', 'diff.pages');
+  // TODO This variable was probably removed in Backdrop without replacement.
   $context = array(
     'states' => array(variable_get('diff_default_state_user', 'raw')),
     'view_mode' => 'diff_standard',
@@ -229,13 +233,13 @@ function _user_rev_diff_body_rows($old_user, $new_user) {
  */
 function user_rev_diff_inline_show($new_user, $old_vid = 0, $metadata = TRUE) {
   user_build_content($new_user, 'revision');
-  $new = drupal_render($new_user->content);
+  $new = backdrop_render($new_user->content);
   module_load_include('inc', 'diff', 'diff.pages');
   if ($old_vid) {
     $old_user = user_revision_load($new_user->uid, $old_vid, TRUE);
     user_build_content($old_user, 'revision');
-    $old = drupal_render($old_user->content);
-    $output = $metadata ? theme('user_rev_diff_inline_metadata', array('user' => $new_user)) : '';
+    $old = backdrop_render($old_user->content);
+    $output = $metadata?theme('user_rev_diff_inline_metadata', array('user' => $new_user)) : '';
     $output .= diff_get_inline($old, $new);
     return $output;
   }

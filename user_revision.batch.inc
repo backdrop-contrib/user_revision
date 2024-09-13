@@ -18,7 +18,7 @@ function user_revision_table_init_data_batch_process($total, &$context) {
 
   // Batch default values.
   if (empty($context['sandbox']['processed'])) {
-    $context['sandbox']['max'] = $total ;
+    $context['sandbox']['max'] = $total;
     $context['sandbox']['processed'] = 0;
   }
 
@@ -26,8 +26,20 @@ function user_revision_table_init_data_batch_process($total, &$context) {
   // already were added to {user_revision} table.
   $query = db_select('users', 'u');
   $query->leftJoin('user_revision', 'ur', 'u.uid = ur.uid');
-  $query->fields('u', array('uid', 'vid', 'name', 'mail', 'theme', 'signature', 'signature_format',
-    'status', 'timezone', 'language', 'picture', 'data'))
+  $query->fields('u', array(
+    'uid',
+    'vid',
+    'name',
+    'mail',
+    'theme',
+    'signature',
+    'signature_format',
+    'status',
+    'timezone',
+    'language',
+    'picture',
+    'data',
+  ))
     ->condition('u.uid', 0, '!=')
     ->isNull('ur.uid')
     ->orderBy('u.uid')
@@ -37,8 +49,23 @@ function user_revision_table_init_data_batch_process($total, &$context) {
   if (!empty($data)) {
     // Build query to insert data.
     $query = db_insert('user_revision')
-      ->fields(array('uid', 'vid', 'log', 'timestamp', 'authorid', 'name', 'mail', 'theme', 'signature',
-        'signature_format', 'status', 'timezone', 'language', 'picture', 'data'));
+      ->fields(array(
+      'uid',
+      'vid',
+      'log',
+      'timestamp',
+      'authorid',
+      'name',
+      'mail',
+      'theme',
+      'signature',
+      'signature_format',
+      'status',
+      'timezone',
+      'language',
+      'picture',
+      'data',
+    ));
 
     foreach ($data as $row) {
       // Lookup the user's roles and add to the role revision table.
@@ -76,7 +103,7 @@ function user_revision_table_init_data_batch_process($total, &$context) {
     // Updates Batch message, sandbox and result data.
     $context['sandbox']['processed'] += count($data);
     $context['results']['processed'] = $context['sandbox']['processed'];
-    $context['message'] = t('Processed %processed rows of %count.',
+    $context['message'] = t('Processed %processed rows of %count.', 
       array('%processed' => $context['sandbox']['processed'], '%count' => $context['sandbox']['max']));
     $context['finished'] = 0;
   }
@@ -94,9 +121,9 @@ function user_revision_table_init_data_batch_process($total, &$context) {
 function user_revision_table_init_data_batch_finished($success, $results) {
   if ($success) {
     $message = format_plural($results['processed'], 'One record was added to {user_revision} table.', '@count records were added to {user_revision} table.');
-    drupal_set_message($message);
+    backdrop_set_message($message);
   }
   else {
-    drupal_set_message( t('Finished with an error.'), 'error');
+    backdrop_set_message( t('Finished with an error.'), 'error');
   }
 }
