@@ -222,7 +222,7 @@ function _user_revision_base_path($account) {
  * This extends the UserController class, adding required
  * revision handling for user objects.
  */
-class UserRevisionController extends UserController {
+class UserRevisionController extends UserStorageController {
   /**
    * {@inheritdoc}
    */
