@@ -68,14 +68,14 @@ function user_revision_table_init_data_batch_process($total, &$context) {
     foreach ($data as $row) {
       // Lookup the user's roles and add to the role revision table.
       $roles = db_select('users_roles', 'ur')
-      ->fields('ur', array('rid'))
+      ->fields('ur', array('role'))
       ->condition('uid', $row->uid)
       ->execute()
       ->fetchAll();
       foreach ($roles as $role) {
         // Add roles to user_revision_roles table.
         // Note that as this is a new install. vid = uid.
-        user_revision_add_role($row->uid, $row->uid, $role->rid);
+        user_revision_add_role($row->uid, $row->uid, $role->role);
       }
       $query->values(array(
         'uid' => $row->uid,

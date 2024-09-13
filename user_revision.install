@@ -146,17 +146,17 @@ function user_revision_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
       ),
-      'rid' => array(
-        'description' => 'Primary Key: Role ID.',
-        'type' => 'int',
-        'unsigned' => TRUE,
+      'role' => array(
+        'description' => 'Primary Key: Role.',
+        'type' => 'varchar',
+        'length' => 64,
         'not null' => TRUE,
       ),
     ),
     'indexes' => array(
       'uid' => array('uid'),
     ),
-    'primary key' => array('uid', 'vid', 'rid'),
+    'primary key' => array('uid', 'vid', 'role'),
     'foreign keys' => array(
       'versioned_user' => array(
         'table' => 'users',
@@ -166,10 +166,6 @@ function user_revision_schema() {
         'table' => 'user_revision',
         'columns' => array('vid' => 'vid'),
       ),
-      'role_id' => array(
-        'table' => 'role',
-        'columns' => array('rid' => 'rid'),
-      ),
     ),
   );
 
@@ -177,7 +173,7 @@ function user_revision_schema() {
 }
 
 /**
- * Implements hook_install().().
+ * Implements hook_install().
  */
 function user_revision_install() {
   $schema['users'] = array();

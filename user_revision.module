@@ -412,8 +412,7 @@ function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
     $user = entity_revision_load('user', $vid);
     // Add the revision roles to user object.
     $query = db_select('user_revision_roles', 'revision')
-      ->fields('role', array('rid', 'name'));
-    $query->join('role', 'role', 'role.rid = revision.rid');
+      ->fields('revision', array('role'));
     $roles = $query->condition('revision.vid', $vid)
       ->condition('revision.uid', $uid)
       ->execute()
@@ -580,10 +579,10 @@ function _user_save_revision(&$edit, $update = array()) {
         ->condition('vid', $edit['vid'])
         ->execute();
     }
-    foreach (array_keys($edit['roles']) as $rid) {
-      // Only store real rids, "Authenticated User" is built-in.
-      if ($rid != BACKDROP_AUTHENTICATED_RID) {
-        user_revision_add_role($edit['uid'], $edit['vid'], $rid);
+    foreach (array_keys($account->roles) as $role) {
+      // Only store real roles, "Authenticated User" is built-in.
+      if ($role != BACKDROP_AUTHENTICATED_ROLE) {
+        user_revision_add_role($account->uid, $account->vid, $role);
       }
     }
   }
@@ -661,13 +660,13 @@ function user_revision_ctools_plugin_directory($owner, $plugin_type) {
 /**
  * Function to add a role to user_revision_roles table.
  */
-function user_revision_add_role($uid, $vid, $rid) {
+function user_revision_add_role($uid, $vid, $role) {
   // Add roles to user_revision_roles table.
   db_insert('user_revision_roles')
     ->fields(array(
     'uid' => $uid,
     'vid' => $vid,
-    'rid' => $rid,
+    'role' => $role,
   )
   )->execute();
 }
