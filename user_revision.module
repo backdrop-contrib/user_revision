@@ -481,9 +481,8 @@ function user_revision_list_build($viewed_user) {
 }
 
 /**
- * Implements hook_user_insert().().
- */
-function user_revision_user_insert(&$edit, $account, $category) {
+ * Implements hook_user_insert(). */
+function user_revision_user_insert($account) {
   db_update('user_revision')
     ->condition('vid', $account->vid)
     ->fields(array('uid' => $account->uid))
@@ -491,49 +490,49 @@ function user_revision_user_insert(&$edit, $account, $category) {
 }
 
 /**
- * Implements hook_user_presave().().
+ * Implements hook_user_presave().
  */
-function user_revision_user_presave(&$edit, $account, $category) {
+function user_revision_user_presave($account) {
   global $user;
-  $edit['log'] = empty($edit['log']) ? '' : $edit['log'];
-  $edit = array_merge((array) $account, $edit);
-  $edit['timestamp'] = REQUEST_TIME;
-  $edit['authorid'] = $user->uid;
+  $account->log = empty($account->log) ? '' : $account->log;
+  #$edit = array_merge((array) $account, $edit);
+  $account->timestamp = REQUEST_TIME;
+  $account->authorid = $user->uid;
 
   // Load the old hashed password again.
-  if (empty($edit['pass']) && !empty($edit['original']->pass)) {
-    $edit['pass'] = $edit['original']->pass;
+  if (empty($account->pass) && !empty($account->original->pass)) {
+    $account->pass = $account->original->pass;
   }
 
   // Allow this module to be extended.
-  $custom_fields = _user_revision_get_custom_fields($edit);
+  $custom_fields = _user_revision_get_custom_fields($account);
   foreach ($custom_fields as $field => $value) {
-    $edit[$field] = $value;
+    $account->$field = $value;
   }
-  $edit = array_merge((array) $custom_fields, $edit);
 
-  if ((isset($edit['revision']) && $edit['revision'] == 1)
+  if ((isset($account->revision) && $account->revision == 1)
       || $account->is_new
-      || (!isset($edit['revision']) && config_get('user_revision.settings', 'user_revision_by_default'))) {
+      || (!isset($account->revision) && config_get('user_revision.settings', 'user_revision_by_default'))) {
 
-    if (isset($edit['vid'])) {
-      $edit['old_vid'] = $edit['vid'];
-      unset($edit['vid']);
+    if (isset($account->vid)) {
+      $account->old_vid = $account->vid;
+      unset($account->vid);
     }
-    _user_save_revision($edit);
+dsm($account);
+    _user_save_revision($account);
   }
   else {
-    _user_save_revision($edit, array('vid'));
+    _user_save_revision($account, array('vid'));
   }
 }
 
 /**
  * Adds a hook_user_revision_custom_fields() function.
  */
-function _user_revision_get_custom_fields($edit = NULL) {
+function _user_revision_get_custom_fields($account = NULL) {
   $custom_fields = array();
   foreach (module_implements('user_revision_custom_fields') as $module) {
-    $invoke = module_invoke($module, 'user_revision_custom_fields', $edit);
+    $invoke = module_invoke($module, 'user_revision_custom_fields', $account);
     $custom_fields = array_merge($invoke, $custom_fields);
   }
   return $custom_fields;
@@ -558,22 +557,23 @@ function user_revision_user_delete($account) {
 /**
  * Save record to the database.
  */
-function _user_save_revision(&$edit, $update = array()) {
+function _user_save_revision(&$account, $update = array()) {
   $picture = NULL;
-  if (isset($edit['picture']) && is_object($edit['picture'])) {
-    $picture = $edit['picture'];
-    $edit['picture'] = $picture->fid;
+  if (isset($account->picture) && is_object($account->picture)) {
+    $picture = $account->picture;
+    $account->picture = $picture->fid;
   }
   // If $update is empty a new revision is created, otherwise the current vid is updated.
-  backdrop_write_record('user_revision', $edit, $update);
+dsm($account);
+  backdrop_write_record('user_revision', $account, $update);
 
   // Insert each role to user_revision_roles table.
-  if (!empty($edit['roles'])) {
+  if (!empty($account->roles)) {
     // If updating, delete any existing roles for this revision, as we're going to re-add them all.
     if (!empty($update)) {
       db_delete('user_revision_roles')
-        ->condition('uid', $edit['uid'])
-        ->condition('vid', $edit['vid'])
+        ->condition('uid', $account->uid)
+        ->condition('vid', $account->vid)
         ->execute();
     }
     foreach (array_keys($account->roles) as $role) {
@@ -585,8 +585,8 @@ function _user_save_revision(&$edit, $update = array()) {
   }
 
   if (is_object($picture)) {
-    file_usage_add($picture, 'user_revision', 'user', $edit['vid']);
-    $edit['picture'] = $picture;
+    file_usage_add($picture, 'user_revision', 'user', $account->vid);
+    $account->picture = $picture;
   }
 }
 
