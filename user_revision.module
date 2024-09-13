@@ -327,62 +327,59 @@ function user_revision_form_user_register_form_alter(&$form, &$form_state, $form
 }
 
 /**
- ] * Implements hook_form_alter().().
+ * Implements hook_form_alter().
  */
 function user_revision_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  // Only alter the form if it's the actual account form (i.e. not a profile2 form).
-  if ($form['#user_category'] == 'account') {
-    $account = $form_state['user'];
-    $allowed = user_access('choose user revisions') || user_access('administer users');
-    $default = config_get('user_revision.settings', 'user_revision_by_default');
-    if ($allowed || $default) {
-      $form['revision_information'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('Revision information'),
-        '#collapsible' => FALSE,
-        '#attributes' => array(
-          'class' => array('user-profile-form-revision-information'),
-        ),
-        '#weight' => 20,
-      );
-      $form['revision_information']['revision'] = array(
-        '#type' => $allowed ? 'checkbox' : 'value',
-        '#title' => t('Create new revision'),
-        '#default_value' => $default,
-      );
-      $form['revision_information']['log'] = array(
-        '#type' => 'textarea',
-        '#title' => t('Revision log message'),
-        '#rows' => 4,
-        '#description' => t('Provide an explanation of the changes you are making. This will help other authors understand your motivations.'),
-        '#states' => array(
-          'invisible' => array(
-            'input[name="revision"]' => array('checked' => FALSE),
-          ),
-        ),
-      );
-    }
-    else {
-      $form['revision'] = array(
-        '#type' => 'value',
-        '#value' => FALSE,
-      );
-      $form['log'] = array(
-        '#type' => 'value',
-        '#value' => '',
-      );
-    }
-    $form['#submit'][] = 'user_revision_user_profile_form_submit';
-
-    $form['vid'] = array(
-      '#type' => 'value',
-      '#value' => isset($account->vid) ? $account->vid : NULL,
+  $account = $form_state['user'];
+  $allowed = user_access('choose user revisions') || user_access('administer users');
+  $default = config_get('user_revision.settings', 'user_revision_by_default');
+  if ($allowed || $default) {
+    $form['revision_information'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Revision information'),
+      '#collapsible' => FALSE,
+      '#attributes' => array(
+        'class' => array('user-profile-form-revision-information'),
+      ),
+      '#weight' => 20,
     );
-    $form['ip'] = array(
-      '#type' => 'value',
-      '#value' => ip_address(),
+    $form['revision_information']['revision'] = array(
+      '#type' => $allowed ? 'checkbox' : 'value',
+      '#title' => t('Create new revision'),
+      '#default_value' => $default,
+    );
+    $form['revision_information']['log'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Revision log message'),
+      '#rows' => 4,
+      '#description' => t('Provide an explanation of the changes you are making. This will help other authors understand your motivations.'),
+      '#states' => array(
+        'invisible' => array(
+          'input[name="revision"]' => array('checked' => FALSE),
+        ),
+      ),
     );
   }
+  else {
+    $form['revision'] = array(
+      '#type' => 'value',
+      '#value' => FALSE,
+    );
+    $form['log'] = array(
+      '#type' => 'value',
+      '#value' => '',
+    );
+  }
+  $form['#submit'][] = 'user_revision_user_profile_form_submit';
+
+  $form['vid'] = array(
+    '#type' => 'value',
+    '#value' => isset($account->vid) ? $account->vid : NULL,
+  );
+  $form['ip'] = array(
+    '#type' => 'value',
+    '#value' => ip_address(),
+  );
 }
 /**
  * Submit function for the user account and profile editing form.
