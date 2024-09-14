@@ -3,5 +3,6 @@ description = Adds revision support for users.
 package = User
 backdrop = 1.x
 type = module
+dependencies[] = entity_plus
 
 configure = admin/config/people/revisions

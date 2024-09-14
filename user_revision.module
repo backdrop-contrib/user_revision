@@ -406,7 +406,7 @@ function user_revision_show($user, $vid) {
  */
 function user_revision_load($uid, $vid = NULL, $reset = FALSE) {
   if (isset($vid)) {
-    $user = entity_revision_load('user', $vid);
+    $user = entity_plus_revision_load('user', $vid);
     // Add the revision roles to user object.
     $query = db_select('user_revision_roles', 'revision')
       ->fields('revision', array('role'));
