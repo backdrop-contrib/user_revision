@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_help().().
+ * Implements hook_help().
  */
 function user_rev_diff_help($path, $arg) {
   switch ($path) {
@@ -22,7 +22,7 @@ function user_rev_diff_help($path, $arg) {
 }
 
 /**
- * Implements hook_menu().().
+ * Implements hook_menu().
  */
 function user_rev_diff_menu() {
   $items = array();
@@ -49,7 +49,7 @@ function user_rev_diff_menu() {
 }
 
 /**
- * Implements hook_menu_alter().().
+ * Implements hook_menu_alter().
  */
 function user_rev_diff_menu_alter(&$callbacks) {
   // Overwrite the default 'Revisions' page
@@ -60,7 +60,7 @@ function user_rev_diff_menu_alter(&$callbacks) {
 }
 
 /**
- * Implements hook_admin_paths().().
+ * Implements hook_admin_paths().
  */
 function user_rev_diff_admin_paths() {
   // TODO This variable was probably removed in Backdrop without replacement.
@@ -90,7 +90,7 @@ function user_rev_diff_user_revision_access($user, $op = 'view') {
 }
 
 /**
- * Implements hook_block_info().().
+ * Implements hook_block_info().
  */
 function user_rev_diff_block_info() {
   return array('inline' => array('info' => t('Inline User diff')));
@@ -108,7 +108,7 @@ function user_rev_diff_config_info() {
 }
 
 /**
- * Implements hook_block_view().().
+ * Implements hook_block_view().
  */
 function user_rev_diff_block_view($delta) {
   $block = array();
@@ -133,7 +133,7 @@ function user_rev_diff_block_view($delta) {
 }
 
 /**
- * Implements hook_user_view_alter().().
+ * Implements hook_user_view_alter().
  */
 function user_rev_diff_user_view_alter(&$build) {
   $account = $build['#account'];
@@ -154,7 +154,7 @@ function user_rev_diff_user_view_alter(&$build) {
 }
 
 /**
- * Implements hook_form_alter().().
+ * Implements hook_form_alter().
  */
 function user_rev_diff_form_user_profile_form_alter(&$form, $form_state, $form_id) {
   if ($form['#user_category'] == 'account') {
@@ -179,7 +179,7 @@ function user_rev_diff_form_user_profile_form_alter(&$form, $form_state, $form_i
 }
 
 /**
- * Implements hook_form_alter() for node_type_form.().
+ * Implements hook_form_alter() for node_type_form.
  */
 function user_rev_diff_form_user_revision_admin_settings_alter(&$form, $form_state) {
   // User revision settings form.
@@ -241,7 +241,7 @@ function user_rev_diff_user_form_build_preview_changes($form, &$form_state) {
 }
 
 /**
- * Implements hook_theme().().
+ * Implements hook_theme().
  */
 function user_rev_diff_theme() {
   return array(

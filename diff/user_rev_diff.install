@@ -17,9 +17,3 @@ function user_rev_diff_update_1000() {
   update_variable_del('show_user_rev_diff_inline');
 }
 
-/**
- * Implements hook_install().
- */
-function user_rev_diff_install() {
-  // Dynamically generated variable data was detected.
-}

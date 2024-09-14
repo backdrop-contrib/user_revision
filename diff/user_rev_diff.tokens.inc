@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_token_info().().
+ * Implements hook_token_info().
  */
 function user_rev_diff_token_info() {
   $user['diff'] = array(
@@ -24,7 +24,7 @@ function user_rev_diff_token_info() {
 }
 
 /**
- * Implements hook_tokens().().
+ * Implements hook_tokens().
  */
 function user_rev_diff_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $sanitize = !empty($options['sanitize']);
