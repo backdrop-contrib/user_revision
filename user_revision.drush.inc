@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implements hook_sql_drush_sql_sync_sanitize.().
+ * Implements hook_sql_drush_sql_sync_sanitize.
  *
  * Sanitize email addresses in the user_revision table when the user_revision
  * module is enabled. Without this entity_load() will load user objects with

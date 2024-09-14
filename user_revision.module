@@ -8,17 +8,17 @@
 define('USER_REVISION_BATCH_USERS_LIMIT', 100);
 
 /**
- * Implements hook_views_api().().
+ * Implements hook_views_api().
  */
 function user_revision_views_api() {
   return array(
-    'api' => '3.0-alpha1',
+    'api' => '3.0',
     'path' => backdrop_get_path('module', 'user_revision') . '/views',
   );
 }
 
 /**
- * Implements hook_menu().().
+ * Implements hook_menu().
  */
 function user_revision_menu() {
   $items['user/%user/revisions'] = array(
@@ -147,7 +147,7 @@ function _user_revision_access($u, $perm) {
 }
 
 /**
- * Implements hook_permission().().
+ * Implements hook_permission().
  */
 function user_revision_permission() {
   return array(
@@ -194,7 +194,7 @@ function user_revision_config_info() {
 }
 
 /**
- * Implements hook_admin_paths().().
+ * Implements hook_admin_paths().
  */
 function user_revision_admin_paths() {
   if (config_get('user_revision.settings', 'user_revision_admin_theme')) {
@@ -248,7 +248,7 @@ class UserRevisionController extends UserStorageController {
 }
 
 /**
- * Implements hook_schema_alter().().
+ * Implements hook_schema_alter().
  */
 function user_revision_schema_alter(&$schema) {
   $schema['users']['fields']['vid'] = array(
@@ -273,7 +273,7 @@ function user_revision_schema_alter(&$schema) {
 }
 
 /**
- * Implements hook_entity_info_alter().().
+ * Implements hook_entity_info_alter().
  */
 function user_revision_entity_info_alter(&$entity_info) {
   module_load_install('user_revision');
@@ -295,7 +295,7 @@ function user_revision_entity_info_alter(&$entity_info) {
 
 
 /**
- * Implements hook_entity_property_info_alter().().
+ * Implements hook_entity_property_info_alter().
  */
 function user_revision_entity_property_info_alter(&$info) {
   $info['user']['properties']['vid'] = array(
@@ -313,7 +313,7 @@ function user_revision_entity_property_info_alter(&$info) {
 }
 
 /**
- * Implements hook_form_alter().().
+ * Implements hook_form_alter().
  */
 function user_revision_form_user_register_form_alter(&$form, &$form_state, $form_id) {
   $form['vid'] = array(
@@ -518,7 +518,6 @@ function user_revision_user_presave($account) {
       $account->old_vid = $account->vid;
       unset($account->vid);
     }
-dsm($account);
     _user_save_revision($account);
   }
   else {
@@ -540,7 +539,7 @@ function _user_revision_get_custom_fields($account = NULL) {
 
 
 /**
- * Implements hook_user_delete().().
+ * Implements hook_user_delete().
  */
 function user_revision_user_delete($account) {
   $revisions = db_select('user_revision', 'ur')
@@ -564,7 +563,6 @@ function _user_save_revision(&$account, $update = array()) {
     $account->picture = $picture->fid;
   }
   // If $update is empty a new revision is created, otherwise the current vid is updated.
-dsm($account);
   backdrop_write_record('user_revision', $account, $update);
 
   // Insert each role to user_revision_roles table.
@@ -643,7 +641,7 @@ function user_revision_delete($revision) {
 }
 
 /**
- * Implements hook_ctools_plugin_directory().().
+ * Implements hook_ctools_plugin_directory().
  */
 function user_revision_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools') {

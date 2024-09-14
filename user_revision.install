@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_schema().().
+ * Implements hook_schema().
  */
 function user_revision_schema() {
   $schema['user_revision'] = array(
@@ -222,7 +222,6 @@ function user_revision_install() {
 
   // Add uid-0 record.
   _user_revision_add_uid_0();
-  // Dynamically generated variable data was detected on the following lines.
 }
 
 /**
@@ -254,7 +253,7 @@ function _user_revision_add_uid_0() {
 }
 
 /**
- * Implements hook_uninstall().().
+ * Implements hook_uninstall().
  */
 function user_revision_uninstall() {
   module_load_include('module', 'user_revision');
@@ -268,13 +267,13 @@ function user_revision_uninstall() {
   }
 }
 
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
+// The old hook_update_N functions cannot be applied to Backdrop.
 function user_revision_update_7001() { }
 
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
+// The old hook_update_N functions cannot be applied to Backdrop.
 function user_revision_update_7002() { }
 
-// TODO The old hook_update_N functions cannot be applied to Backdrop.
+// The old hook_update_N functions cannot be applied to Backdrop.
 function user_revision_update_7003() { }
 
 /**
